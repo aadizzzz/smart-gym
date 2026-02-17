@@ -47,7 +47,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased selection:bg-primary selection:text-white">
         <Routes>
           <Route path="/" element={<LandingPage />} />
