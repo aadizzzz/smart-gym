@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
     --color-primary: #13ec13;
     /* Define semantic colors that can be used in the config if needed, 
