@@ -35,20 +35,20 @@ const featuresPayload = [
 
 export const Features: React.FC = () => {
     return (
-        <section id="features" className="bg-background-dark py-20 px-6 lg:px-10">
+        <section id="features" className="bg-gray-50 dark:bg-background-dark py-20 px-6 lg:px-10 transition-colors duration-300">
             <div className="mx-auto max-w-7xl">
                 <div className="mb-16 text-center">
-                    <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">Core Functionality</h2>
-                    <p className="mx-auto max-w-2xl text-lg text-text-secondary">Everything you need to automate your fitness business, from entry to billing.</p>
+                    <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">Core Functionality</h2>
+                    <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-text-secondary">Everything you need to automate your fitness business, from entry to billing.</p>
                 </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {featuresPayload.map((feature, idx) => (
-                        <div key={idx} className="group rounded-xl border border-gray-800 bg-surface-dark p-8 transition-all hover:border-primary/50 hover:bg-surface-dark/80">
+                        <div key={idx} className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-8 transition-all hover:border-primary/50 hover:bg-white dark:hover:bg-surface-dark/80 hover:shadow-lg dark:hover:shadow-none">
                             <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
                                 <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
                             </div>
-                            <h3 className="mb-3 text-xl font-bold text-white">{feature.title}</h3>
-                            <p className="text-text-secondary">{feature.desc}</p>
+                            <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">{feature.title}</h3>
+                            <p className="text-gray-600 dark:text-text-secondary">{feature.desc}</p>
                         </div>
                     ))}
                 </div>

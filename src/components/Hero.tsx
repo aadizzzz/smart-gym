@@ -15,7 +15,7 @@ export const Hero: React.FC = () => {
     };
 
     return (
-        <section className="relative overflow-hidden px-6 py-16 lg:px-10 lg:py-24">
+        <section className="relative overflow-hidden px-6 py-16 lg:px-10 lg:py-24 bg-white dark:bg-background-dark transition-colors duration-300">
             {/* Background decorative elements */}
             <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl"></div>
             <div className="absolute top-1/2 left-0 h-64 w-64 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-3xl"></div>
@@ -23,15 +23,15 @@ export const Hero: React.FC = () => {
             <div className="mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16">
                 {/* Text Content */}
                 <div className="flex flex-1 flex-col items-center text-center lg:items-start lg:text-left">
-                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-700 bg-surface-dark px-3 py-1">
+                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-surface-dark px-3 py-1 transition-colors">
                         <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-300">New: AI Retention Tool</span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">New: AI Retention Tool</span>
                     </div>
-                    <h1 className="mb-6 text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl xl:text-7xl">
+                    <h1 className="mb-6 text-5xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-6xl xl:text-7xl transition-colors">
                         Run Your Gym <br className="hidden lg:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">Like a Machine</span>
                     </h1>
-                    <p className="mb-8 max-w-2xl text-lg text-text-secondary sm:text-xl">
+                    <p className="mb-8 max-w-2xl text-lg text-gray-600 dark:text-text-secondary sm:text-xl transition-colors">
                         Smart Automation. Real Insights. Zero Chaos. The all-in-one OS designed to scale modern fitness centers without the headache.
                     </p>
 
@@ -40,7 +40,7 @@ export const Hero: React.FC = () => {
                             <input
                                 type="email"
                                 placeholder="Enter your email"
-                                className="flex-1 rounded-lg border border-gray-700 bg-surface-dark px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none"
+                                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-surface-dark px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={status === 'loading' || status === 'success'}
@@ -48,20 +48,20 @@ export const Hero: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={status === 'loading' || status === 'success'}
-                                className="flex items-center justify-center rounded-lg bg-primary px-6 font-bold text-white transition-all hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center justify-center rounded-lg bg-primary px-6 font-bold text-white transition-all hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
                             >
                                 {status === 'loading' ? '...' : status === 'success' ? 'Sent!' : 'Get Started'}
                             </button>
                         </form>
-                        {status === 'success' && <p className="text-green-400 text-sm">Thanks! We've added you to our database.</p>}
+                        {status === 'success' && <p className="text-green-600 dark:text-green-400 text-sm">Thanks! We've added you to our database.</p>}
                     </div>
 
-                    <div className="mt-2 flex items-center gap-4 text-sm text-text-secondary">
+                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-text-secondary transition-colors">
                         <div className="flex -space-x-2">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 overflow-hidden relative">
+                                <div key={i} className="h-8 w-8 rounded-full border-2 border-white dark:border-background-dark bg-gray-200 dark:bg-gray-600 overflow-hidden relative transition-colors">
                                     {/* Placeholder avatars since originals might expire */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-500 to-gray-700"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-500 dark:to-gray-700"></div>
                                 </div>
                             ))}
                         </div>
@@ -71,23 +71,23 @@ export const Hero: React.FC = () => {
 
                 {/* Hero Image / Visual */}
                 <div className="relative flex-1 w-full max-w-lg lg:max-w-none pt-10 px-4 sm:px-0">
-                    <div className="relative aspect-square w-full rounded-2xl border border-gray-800 bg-surface-dark/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-visible">
+                    <div className="relative aspect-square w-full rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-surface-dark/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-visible transition-colors">
                         {/* Background Gradient */}
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-900 to-black opacity-80 overflow-hidden"></div>
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black opacity-80 overflow-hidden transition-colors"></div>
 
                         {/* Decorative Text */}
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-4xl lg:text-5xl opacity-20 rotate-[-12deg] select-none pointer-events-none">
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-200 dark:text-gray-800 font-bold text-4xl lg:text-5xl opacity-40 dark:opacity-20 rotate-[-12deg] select-none pointer-events-none transition-colors">
                             GYM OS
                         </div>
 
                         {/* Floating Stats Card - Positioned relative to container */}
-                        <div className="absolute -bottom-12 left-4 right-4 sm:-bottom-10 sm:-left-10 sm:right-auto sm:w-[380px] rounded-xl border border-gray-700 bg-surface-dark p-5 shadow-xl backdrop-blur-md z-20">
+                        <div className="absolute -bottom-12 left-4 right-4 sm:-bottom-10 sm:-left-10 sm:right-auto sm:w-[380px] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark p-5 shadow-xl backdrop-blur-md z-20 transition-colors">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-text-secondary">Monthly Recovery</p>
-                                    <h3 className="mt-1 text-2xl font-bold text-white">$42,500</h3>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-text-secondary">Monthly Recovery</p>
+                                    <h3 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">$42,500</h3>
                                 </div>
-                                <div className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-green-400">
+                                <div className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-400">
                                     <span className="material-symbols-outlined text-[16px]">trending_up</span>
                                     <span className="text-xs font-bold">+25%</span>
                                 </div>
@@ -103,9 +103,9 @@ export const Hero: React.FC = () => {
                                     </defs>
                                     <path d="M0,100 C40,90 80,100 120,70 C160,40 200,60 240,40 C280,20 320,30 380,10 V120 H0 Z" fill="url(#gradient)"></path>
                                     <path d="M0,100 C40,90 80,100 120,70 C160,40 200,60 240,40 C280,20 320,30 380,10" fill="none" stroke="#22c55e" strokeLinecap="round" strokeWidth="3"></path>
-                                    <circle cx="120" cy="70" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
-                                    <circle cx="240" cy="40" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
-                                    <circle cx="380" cy="10" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
+                                    <circle cx="120" cy="70" fill="currentColor" className="text-white dark:text-[#111827]" r="4" stroke="#22c55e" strokeWidth="2"></circle>
+                                    <circle cx="240" cy="40" fill="currentColor" className="text-white dark:text-[#111827]" r="4" stroke="#22c55e" strokeWidth="2"></circle>
+                                    <circle cx="380" cy="10" fill="currentColor" className="text-white dark:text-[#111827]" r="4" stroke="#22c55e" strokeWidth="2"></circle>
                                 </svg>
                             </div>
                         </div>
