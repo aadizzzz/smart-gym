@@ -13,7 +13,19 @@
 
 /* Base styles for Light Mode */
 :root {
-    --background: #ffffff;
+    --background: #f1f5f9;
+    /* Slate-100 */
+    --surface: #ffffff;
+    --surface-highlight: #e2e8f0;
+    /* Slate-200 */
+    --text-primary: #0f172a;
+    /* Slate-900 */
+    --text-secondary: #64748b;
+    /* Slate-500 */
+    --text-tertiary: #94a3b8;
+    /* Slate-400 */
+    --border: #e2e8f0;
+    /* Slate-200 */
     --foreground: #0f172a;
 }
 
@@ -21,6 +33,16 @@
 .dark {
     --background: #111811;
     /* Dark Greenish Black */
+    --surface: #1e2a23;
+    /* Dark Card BG */
+    --surface-highlight: #28392e;
+    /* Lighter BG/Border */
+    --text-primary: #ffffff;
+    --text-secondary: #9db9a6;
+    /* Muted Green Text */
+    --text-tertiary: #5c6f62;
+    /* Darker Muted Text */
+    --border: #28392e;
     --foreground: #ffffff;
 }
 

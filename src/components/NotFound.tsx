@@ -3,27 +3,27 @@ import { Link } from 'react-router-dom';
 
 export const NotFound: React.FC = () => {
     return (
-        <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display overflow-x-hidden min-h-screen flex flex-col">
+        <div className="bg-[var(--background)] text-[var(--text-primary)] font-display overflow-x-hidden min-h-screen flex flex-col">
             {/* Top Navigation */}
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] dark:border-b-[#282f39] px-10 py-3 bg-white dark:bg-[#111418]">
-                <div className="flex items-center gap-4 text-[#111418] dark:text-white">
+            <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--border)] px-10 py-3 bg-[var(--surface)]">
+                <div className="flex items-center gap-4 text-[var(--text-primary)]">
                     <div className="size-8 text-primary">
                         <span className="material-symbols-outlined text-[32px]">fitness_center</span>
                     </div>
-                    <h2 className="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Smart Gym</h2>
+                    <h2 className="text-[var(--text-primary)] text-lg font-bold leading-tight tracking-[-0.015em]">Smart Gym</h2>
                 </div>
                 <div className="hidden md:flex flex-1 justify-end gap-8">
                     <div className="flex items-center gap-9">
-                        <Link className="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin">Dashboard</Link>
-                        <Link className="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin/members">Members</Link>
-                        <Link className="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin/analytics">Analytics</Link>
-                        <Link className="text-[#111418] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" to="#">Settings</Link>
+                        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin">Dashboard</Link>
+                        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin/members">Members</Link>
+                        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-primary transition-colors" to="/admin/analytics">Analytics</Link>
+                        <Link className="text-[var(--text-primary)] text-sm font-medium leading-normal hover:text-primary transition-colors" to="#">Settings</Link>
                     </div>
                     <div className="flex gap-2">
-                        <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 bg-[#f0f2f4] dark:bg-[#282f39] text-[#111418] dark:text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5 hover:bg-gray-200 dark:hover:bg-[#3e4856] transition-colors">
+                        <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 bg-[var(--surface-highlight)] text-[var(--text-primary)] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5 hover:bg-gray-200 dark:hover:bg-[#3e4856] transition-colors">
                             <span className="material-symbols-outlined text-[20px]">notifications</span>
                         </button>
-                        <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 bg-[#f0f2f4] dark:bg-[#282f39] text-[#111418] dark:text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5 hover:bg-gray-200 dark:hover:bg-[#3e4856] transition-colors">
+                        <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 bg-[var(--surface-highlight)] text-[var(--text-primary)] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5 hover:bg-gray-200 dark:hover:bg-[#3e4856] transition-colors">
                             <span className="material-symbols-outlined text-[20px]">help</span>
                         </button>
                     </div>
@@ -42,7 +42,7 @@ export const NotFound: React.FC = () => {
 
                 <div className="flex flex-col items-center max-w-2xl w-full text-center space-y-8 animate-fade-in-up">
                     {/* Illustration Area */}
-                    <div className="relative w-full max-w-[400px] aspect-video flex items-center justify-center mb-4 text-gray-400 dark:text-gray-600 opacity-80">
+                    <div className="relative w-full max-w-[400px] aspect-video flex items-center justify-center mb-4 text-[var(--text-tertiary)] opacity-80">
                         {/* Custom SVG for Empty Gym Rack (Minimalist Line Art) */}
                         <svg height="240" viewBox="0 0 240 240" width="240" xmlns="http://www.w3.org/2000/svg" fill="none">
                             {/* Rack Structure */}
@@ -66,20 +66,20 @@ export const NotFound: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <h1 className="text-[120px] font-extrabold leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-black to-gray-500 dark:from-white dark:to-gray-500 opacity-20 select-none">
+                        <h1 className="text-[120px] font-extrabold leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-[var(--text-primary)] to-[var(--text-secondary)] opacity-20 select-none">
                             404
                         </h1>
-                        <h2 className="text-3xl font-bold text-[#111418] dark:text-white tracking-tight">
+                        <h2 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">
                             Looks like this rep doesn't exist.
                         </h2>
-                        <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-base">
+                        <p className="text-[var(--text-secondary)] max-w-md mx-auto text-base">
                             The page you are looking for might have been moved, deleted, or possibly never existed in our training plan.
                         </p>
                     </div>
 
                     <div className="pt-4">
                         <Link
-                            className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-primary transition-all duration-200 bg-transparent border-2 border-primary/30 rounded-lg hover:bg-primary hover:text-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-[#101822]"
+                            className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-primary transition-all duration-200 bg-transparent border-2 border-primary/30 rounded-lg hover:bg-primary hover:text-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-[var(--background)]"
                             to="/admin"
                         >
                             <span className="mr-2 material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
@@ -90,13 +90,13 @@ export const NotFound: React.FC = () => {
             </main>
 
             {/* Footer */}
-            <footer className="flex flex-col gap-6 px-5 py-8 text-center border-t border-solid border-t-[#e5e7eb] dark:border-t-[#282f39] bg-white dark:bg-[#111418]">
+            <footer className="flex flex-col gap-6 px-5 py-8 text-center border-t border-solid border-[var(--border)] bg-[var(--surface)]">
                 <div className="flex flex-wrap items-center justify-center gap-6">
-                    <Link className="text-[#637588] dark:text-[#9da8b9] text-sm font-medium hover:text-primary transition-colors" to="#">Support</Link>
-                    <Link className="text-[#637588] dark:text-[#9da8b9] text-sm font-medium hover:text-primary transition-colors" to="#">Privacy Policy</Link>
-                    <Link className="text-[#637588] dark:text-[#9da8b9] text-sm font-medium hover:text-primary transition-colors" to="#">Terms of Service</Link>
+                    <Link className="text-[var(--text-secondary)] text-sm font-medium hover:text-primary transition-colors" to="#">Support</Link>
+                    <Link className="text-[var(--text-secondary)] text-sm font-medium hover:text-primary transition-colors" to="#">Privacy Policy</Link>
+                    <Link className="text-[var(--text-secondary)] text-sm font-medium hover:text-primary transition-colors" to="#">Terms of Service</Link>
                 </div>
-                <p className="text-[#637588] dark:text-[#9da8b9] text-sm">© 2024 Smart Gym Automation Systems. All rights reserved.</p>
+                <p className="text-[var(--text-secondary)] text-sm">© 2024 Smart Gym Automation Systems. All rights reserved.</p>
             </footer>
         </div>
     );
