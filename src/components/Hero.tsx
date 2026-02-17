@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../lib/db';
+import { motion } from 'framer-motion';
 
 export const Hero: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -23,20 +24,41 @@ export const Hero: React.FC = () => {
             <div className="mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16">
                 {/* Text Content */}
                 <div className="flex flex-1 flex-col items-center text-center lg:items-start lg:text-left">
-                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-highlight)] px-3 py-1 transition-colors">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-highlight)] px-3 py-1 transition-colors"
+                    >
                         <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
                         <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">New: AI Retention Tool</span>
-                    </div>
-                    <h1 className="mb-6 text-5xl font-extrabold leading-tight tracking-tight text-[var(--text-primary)] sm:text-6xl xl:text-7xl transition-colors">
+                    </motion.div>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="mb-6 text-5xl font-extrabold leading-tight tracking-tight text-[var(--text-primary)] sm:text-6xl xl:text-7xl transition-colors"
+                    >
                         Run Your Gym <br className="hidden lg:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">Like a Machine</span>
-                    </h1>
-                    <p className="mb-8 max-w-2xl text-lg text-[var(--text-secondary)] sm:text-xl transition-colors">
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mb-8 max-w-2xl text-lg text-[var(--text-secondary)] sm:text-xl transition-colors"
+                    >
                         Smart Automation. Real Insights. Zero Chaos. The all-in-one OS designed to scale modern fitness centers without the headache.
-                    </p>
+                    </motion.p>
 
                     <div className="flex flex-col w-full max-w-sm gap-4 mb-8">
-                        <form onSubmit={handleSubmit} className="flex gap-2">
+                        <motion.form
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            onSubmit={handleSubmit}
+                            className="flex gap-2"
+                        >
                             <input
                                 type="email"
                                 placeholder="Enter your email"
@@ -45,14 +67,16 @@ export const Hero: React.FC = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={status === 'loading' || status === 'success'}
                             />
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 type="submit"
                                 disabled={status === 'loading' || status === 'success'}
-                                className="flex items-center justify-center rounded-lg bg-primary px-6 font-bold text-white transition-all hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
+                                className="flex items-center justify-center rounded-lg bg-primary px-6 font-bold text-white transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
                             >
                                 {status === 'loading' ? '...' : status === 'success' ? 'Sent!' : 'Get Started'}
-                            </button>
-                        </form>
+                            </motion.button>
+                        </motion.form>
                         {status === 'success' && <p className="text-green-600 dark:text-green-400 text-sm">Thanks! We've added you to our database.</p>}
                     </div>
 
@@ -70,8 +94,17 @@ export const Hero: React.FC = () => {
                 </div>
 
                 {/* Hero Image / Visual */}
-                <div className="relative flex-1 w-full max-w-lg lg:max-w-none pt-10 px-4 sm:px-0">
-                    <div className="relative aspect-square w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)]/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-visible transition-colors">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="relative flex-1 w-full max-w-lg lg:max-w-none pt-10 px-4 sm:px-0"
+                >
+                    <motion.div
+                        animate={{ y: [0, -20, 0] }}
+                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                        className="relative aspect-square w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)]/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-visible transition-colors"
+                    >
                         {/* Background Gradient */}
                         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black opacity-80 overflow-hidden transition-colors"></div>
 
@@ -81,7 +114,11 @@ export const Hero: React.FC = () => {
                         </div>
 
                         {/* Floating Stats Card - Positioned relative to container */}
-                        <div className="absolute -bottom-12 left-4 right-4 sm:-bottom-10 sm:-left-10 sm:right-auto sm:w-[380px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xl backdrop-blur-md z-20 transition-colors">
+                        <motion.div
+                            animate={{ y: [0, 15, 0] }}
+                            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute -bottom-12 left-4 right-4 sm:-bottom-10 sm:-left-10 sm:right-auto sm:w-[380px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xl backdrop-blur-md z-20 transition-colors"
+                        >
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-[var(--text-secondary)]">Monthly Recovery</p>
@@ -108,9 +145,9 @@ export const Hero: React.FC = () => {
                                     <circle cx="380" cy="10" fill="currentColor" className="text-white dark:text-[#111827]" r="4" stroke="#22c55e" strokeWidth="2"></circle>
                                 </svg>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
             </div>
         </section>
     );

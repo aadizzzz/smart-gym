@@ -1,29 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { type User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import React from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
-export const ProtectedRoute: React.FC = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+interface ProtectedRouteProps {
+    allowedRoles?: string[];
+}
 
-    useEffect(() => {
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        // Listen for changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+    const { user, role, gymId, hasMembership, loading } = useAuth();
+    const location = useLocation();
 
     if (loading) {
         return (
@@ -33,5 +18,44 @@ export const ProtectedRoute: React.FC = () => {
         );
     }
 
-    return user ? <Outlet /> : <Navigate to="/login" replace />;
+    if (!user) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // Role-based redirection logic
+    if (role === 'gym_admin') {
+        if (!gymId && location.pathname !== '/onboarding') {
+            return <Navigate to="/onboarding" replace />;
+        }
+        if (gymId && location.pathname === '/onboarding') {
+            return <Navigate to="/admin" replace />;
+        }
+    }
+
+    if (role === 'member') {
+        if (!gymId && location.pathname !== '/choose-gym') {
+            return <Navigate to="/choose-gym" replace />;
+        }
+        if (gymId && !hasMembership && location.pathname !== '/choose-plan' && location.pathname !== '/choose-gym') {
+            return <Navigate to="/choose-plan" replace />;
+        }
+        // Redirect away from selection pages if already set
+        if (gymId && location.pathname === '/choose-gym') {
+            return <Navigate to="/dashboard" replace />;
+        }
+        if (hasMembership && location.pathname === '/choose-plan') {
+            return <Navigate to="/dashboard" replace />;
+        }
+    }
+
+    if (allowedRoles && role && !allowedRoles.includes(role)) {
+        // Redirect to appropriate dashboard if role is not allowed for this route
+        if (role === 'gym_admin') return <Navigate to="/admin" replace />;
+        if (role === 'member') return <Navigate to="/dashboard" replace />;
+        if (role === 'trainer') return <Navigate to="/trainer" replace />;
+        if (role === 'super_admin' || role === 'platform_admin') return <Navigate to="/platform-admin" replace />;
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
 };

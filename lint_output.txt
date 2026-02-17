@@ -1,0 +1,22 @@
+
+> smart-gym@0.0.0 lint
+> eslint .
+
+
+C:\Users\addhi\OneDrive - csjmu.ac.in\Desktop\Gym Automation\smart-gym\src\components\Onboarding.tsx
+  50:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\addhi\OneDrive - csjmu.ac.in\Desktop\Gym Automation\smart-gym\src\context\AuthContext.tsx
+  20:14  error  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  react-refresh/only-export-components
+
+C:\Users\addhi\OneDrive - csjmu.ac.in\Desktop\Gym Automation\smart-gym\src\context\ThemeContext.tsx
+  65:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\addhi\OneDrive - csjmu.ac.in\Desktop\Gym Automation\smart-gym\src\pages\Analytics.tsx
+  24:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\addhi\OneDrive - csjmu.ac.in\Desktop\Gym Automation\smart-gym\src\pages\Members.tsx
+  40:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 5 problems (5 errors, 0 warnings)
+

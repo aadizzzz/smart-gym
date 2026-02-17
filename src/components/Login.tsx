@@ -1,79 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 
-type UserRole = 'admin' | 'member';
+type UserRole = 'gym_admin' | 'member' | 'trainer' | 'super_admin' | 'platform_admin';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const [isSignUp, setIsSignUp] = useState(false);
-    const [role, setRole] = useState<UserRole>('admin');
+    const [selectedRole, setSelectedRole] = useState<UserRole>('gym_admin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { user, role: authRole, loading: authLoading } = useAuth();
 
-    const handleAuth = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                });
-                if (error) throw error;
-                // Since email confirmation is on by default in Supabase, 
-                // we might want to tell the user to check their email.
-                // For now, let's assume auto-confirm is off or we handle it gracefully.
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-                if (error) throw error;
-            }
-
-            // Redirect based on role
-            if (role === 'admin') {
-                navigate('/admin');
-            } else {
-                navigate('/');
-            }
-        } catch (err: any) {
-            console.error("Auth error:", err);
-            handleError(err);
-        } finally {
-            setLoading(false);
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (!authLoading && user && authRole) {
+            if (authRole === 'gym_admin') navigate('/admin');
+            else if (authRole === 'member') navigate('/dashboard');
+            else if (authRole === 'trainer') navigate('/trainer');
+            else if (authRole === 'platform_admin' || authRole === 'super_admin') navigate('/platform-admin');
         }
-    };
+    }, [user, authRole, authLoading, navigate]);
 
-    const handleGoogleLogin = async () => {
-        setError('');
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    },
-                    redirectTo: window.location.origin + (role === 'admin' ? '/admin' : '/'),
-                }
-            });
-            if (error) throw error;
-
-        } catch (err: any) {
-            console.error("Google Auth error:", err);
-            handleError(err);
-            setLoading(false);
-        }
-    };
-
-    const handleError = (err: any) => {
+    const handleError = (err: Error) => {
         if (err.message === 'Invalid login credentials') {
             setError('Invalid email or password.');
         } else if (err.message.includes('already registered')) {
@@ -83,16 +36,77 @@ export const Login: React.FC = () => {
         }
     };
 
+    const handleAuth = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            if (isSignUp) {
+                const { data, error: signUpError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                });
+                if (signUpError) throw signUpError;
+
+                // Create profile for new user
+                if (data.user) {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .upsert([
+                            {
+                                id: data.user.id,
+                                email: email,
+                                role: selectedRole
+                            }
+                        ]);
+                    if (profileError) console.error("Error creating profile:", profileError);
+                }
+            } else {
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (signInError) throw signInError;
+            }
+            // Navigation handled by useEffect
+        } catch (err: unknown) {
+            console.error("Auth error:", err);
+            handleError(err as Error);
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const { error: googleError } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                    redirectTo: window.location.origin + '/dashboard',
+                }
+            });
+            if (googleError) throw googleError;
+        } catch (err: unknown) {
+            console.error("Google Auth error:", err);
+            handleError(err as Error);
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4 relative overflow-hidden font-display">
-            {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#13ec5b]/5 rounded-full blur-[120px]"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#13ec5b]/5 rounded-full blur-[120px]"></div>
             </div>
 
             <div className="w-full max-w-md relative z-10 flex flex-col gap-6">
-                {/* Logo */}
                 <div className="text-center">
                     <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-[var(--surface)] border border-[var(--border)] mb-4 shadow-lg shadow-primary/10">
                         <span className="material-symbols-outlined text-primary text-3xl">fitness_center</span>
@@ -100,30 +114,28 @@ export const Login: React.FC = () => {
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Smart Gym</h1>
                 </div>
 
-                {/* Role Toggles */}
                 <div className="bg-[var(--surface)] p-1 rounded-xl border border-[var(--border)] grid grid-cols-2">
                     <button
-                        onClick={() => setRole('admin')}
-                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'admin' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                        onClick={() => setSelectedRole('gym_admin')}
+                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${selectedRole === 'gym_admin' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                     >
                         Admin Portal
                     </button>
                     <button
-                        onClick={() => setRole('member')}
-                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'member' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                        onClick={() => setSelectedRole('member')}
+                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${selectedRole === 'member' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                     >
                         Member Area
                     </button>
                 </div>
 
-                {/* Main Card */}
                 <div className="bg-[var(--surface)]/80 backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
                     <div className="text-center mb-6">
                         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
                             {isSignUp ? 'Create Account' : 'Welcome Back'}
                         </h2>
                         <p className="text-[var(--text-secondary)] text-sm">
-                            {isSignUp ? `Sign up as a new ${role}` : `Sign in to your ${role} account`}
+                            {isSignUp ? `Sign up as a new ${selectedRole}` : `Sign in to your ${selectedRole} account`}
                         </p>
                     </div>
 
@@ -168,17 +180,19 @@ export const Login: React.FC = () => {
                             </div>
                         </div>
 
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-primary hover:bg-[#0fd60f] text-[#052e16] font-bold py-3.5 rounded-xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full bg-primary hover:bg-[#0fd60f] text-[#052e16] font-bold py-3.5 rounded-xl transition-colors duration-300 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <span className="animate-spin material-symbols-outlined text-[20px]">progress_activity</span>
                             ) : (
                                 isSignUp ? 'Create Account' : 'Sign In'
                             )}
-                        </button>
+                        </motion.button>
 
                         <div className="relative flex items-center py-2">
                             <div className="flex-grow border-t border-[var(--border)]"></div>
@@ -186,15 +200,17 @@ export const Login: React.FC = () => {
                             <div className="flex-grow border-t border-[var(--border)]"></div>
                         </div>
 
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.02, backgroundColor: 'var(--surface-highlight)' }}
+                            whileTap={{ scale: 0.98 }}
                             type="button"
                             onClick={handleGoogleLogin}
                             disabled={loading}
-                            className="w-full bg-[var(--background)] hover:bg-[var(--surface-highlight)] border border-[var(--border)] text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-70"
+                            className="w-full bg-[var(--background)] border border-[var(--border)] text-[var(--text-primary)] font-medium py-3 rounded-xl transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-70"
                         >
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
                             <span>Google</span>
-                        </button>
+                        </motion.button>
                     </form>
 
                     <p className="text-center mt-6 text-[var(--text-secondary)] text-sm">

@@ -1,4 +1,6 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { AnimatedSection } from './AnimatedSection';
 
 const featuresPayload = [
     {
@@ -33,25 +35,51 @@ const featuresPayload = [
     }
 ];
 
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+};
+
 export const Features: React.FC = () => {
     return (
         <section id="features" className="bg-[var(--surface-highlight)] py-20 px-6 lg:px-10 transition-colors duration-300">
             <div className="mx-auto max-w-7xl">
-                <div className="mb-16 text-center">
+                <AnimatedSection className="mb-16 text-center">
                     <h2 className="mb-4 text-3xl font-bold text-[var(--text-primary)] md:text-4xl">Core Functionality</h2>
                     <p className="mx-auto max-w-2xl text-lg text-[var(--text-secondary)]">Everything you need to automate your fitness business, from entry to billing.</p>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                </AnimatedSection>
+                <motion.div
+                    variants={container}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                >
                     {featuresPayload.map((feature, idx) => (
-                        <div key={idx} className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8 transition-all hover:border-primary/50 hover:shadow-lg">
-                            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                                <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
+                        <motion.div
+                            key={idx}
+                            variants={item}
+                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                            className="flex flex-col items-start p-6 bg-[var(--surface)] border border-[var(--border)] rounded-2xl transition-colors hover:border-primary/50 group"
+                        >
+                            <div className="p-3 bg-[var(--surface-highlight)] rounded-xl mb-4 group-hover:bg-primary/20 transition-colors">
+                                <span className="material-symbols-outlined text-3xl text-primary">{feature.icon}</span>
                             </div>
-                            <h3 className="mb-3 text-xl font-bold text-[var(--text-primary)]">{feature.title}</h3>
-                            <p className="text-[var(--text-secondary)]">{feature.desc}</p>
-                        </div>
+                            <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">{feature.title}</h3>
+                            <p className="text-[var(--text-secondary)] leading-relaxed">{feature.desc}</p>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

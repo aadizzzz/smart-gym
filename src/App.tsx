@@ -1,17 +1,29 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
 import { Footer } from './components/Footer';
-import { Admin } from './components/Admin';
-
 import { Login } from './components/Login';
-
-import { Members } from './components/Members';
-
-import { Analytics } from './components/Analytics';
+import { Onboarding } from './components/Onboarding';
+import { Dashboard } from './pages/Dashboard';
+import { Members } from './pages/Members';
+import { Payments } from './pages/Payments';
+import { Trainers } from './pages/Trainers';
+import { Attendance } from './pages/Attendance';
+import { Analytics } from './pages/Analytics';
+import { GymManagement } from './pages/GymManagement';
+import { Leads } from './pages/Leads';
+import { Automation } from './pages/Automation';
+import { Settings } from './pages/Settings';
+import { ChooseGym } from './components/ChooseGym';
+import { ChoosePlan } from './components/ChoosePlan';
+import { TrainerDashboard } from './components/TrainerDashboard';
+import { PlatformAdmin } from './components/PlatformAdmin';
 import { NotFound } from './components/NotFound';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { DashboardLayout } from './components/DashboardLayout';
 
 const LandingPage: React.FC = () => {
   return (
@@ -20,7 +32,6 @@ const LandingPage: React.FC = () => {
       <main className="flex-1">
         <Hero />
         <Features />
-        {/* Call to Action Section from original design - kept simple here */}
         <section className="py-20 px-6 lg:px-10">
           <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-primary relative">
             <div className="absolute inset-0 bg-black opacity-10 mix-blend-overlay"></div>
@@ -43,26 +54,71 @@ const LandingPage: React.FC = () => {
   );
 };
 
-import { ProtectedRoute } from './components/ProtectedRoute';
+const AppRoutes = () => {
+  const location = useLocation();
 
-function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
-      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--text-primary)] font-display antialiased selection:bg-primary selection:text-white transition-colors duration-300">
-        <Routes>
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--text-primary)] font-display antialiased selection:bg-primary selection:text-white transition-colors duration-300">
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
 
+          {/* SaaS Core Flows */}
+          <Route element={<ProtectedRoute allowedRoles={['gym_admin', 'member', 'trainer', 'super_admin', 'platform_admin']} />}>
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/choose-gym" element={<ChooseGym />} />
+            <Route path="/choose-plan" element={<ChoosePlan />} />
+          </Route>
+
           {/* Protected Admin Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/members" element={<Members />} />
-            <Route path="/admin/analytics" element={<Analytics />} />
+          <Route element={<ProtectedRoute allowedRoles={['gym_admin']} />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/admin" element={<Dashboard />} />
+              <Route path="/admin/members" element={<Members />} />
+              <Route path="/admin/payments" element={<Payments />} />
+              <Route path="/admin/trainers" element={<Trainers />} />
+              <Route path="/admin/attendance" element={<Attendance />} />
+              <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/management" element={<GymManagement />} />
+              <Route path="/admin/leads" element={<Leads />} />
+              <Route path="/admin/automation" element={<Automation />} />
+              <Route path="/admin/settings" element={<Settings />} />
+            </Route>
+          </Route>
+
+          {/* Protected Member Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['member']} />}>
+            <Route path="/dashboard" element={
+              <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
+                <span className="material-symbols-outlined text-6xl text-primary mb-6">dashboard</span>
+                <h1 className="text-4xl font-extrabold mb-4 text-[var(--text-primary)] tracking-tight">Welcome to Your Dashboard</h1>
+                <p className="text-[var(--text-secondary)] max-w-md text-lg">Your membership is active! Explore your gym's features and track your workouts.</p>
+              </div>
+            } />
+          </Route>
+
+          {/* Protected Trainer Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['trainer']} />}>
+            <Route path="/trainer" element={<TrainerDashboard />} />
+          </Route>
+
+          {/* Protected Platform Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['platform_admin', 'super_admin']} />}>
+            <Route path="/platform-admin" element={<PlatformAdmin />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <Router basename={import.meta.env.BASE_URL}>
+      <AppRoutes />
     </Router>
   );
 }

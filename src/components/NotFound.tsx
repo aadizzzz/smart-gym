@@ -1,5 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+const MotionLink = motion(Link);
 
 export const NotFound: React.FC = () => {
     return (
@@ -78,13 +81,15 @@ export const NotFound: React.FC = () => {
                     </div>
 
                     <div className="pt-4">
-                        <Link
+                        <MotionLink
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-primary transition-all duration-200 bg-transparent border-2 border-primary/30 rounded-lg hover:bg-primary hover:text-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-[var(--background)]"
                             to="/admin"
                         >
                             <span className="mr-2 material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
                             Back to Dashboard
-                        </Link>
+                        </MotionLink>
                     </div>
                 </div>
             </main>
