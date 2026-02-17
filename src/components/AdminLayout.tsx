@@ -17,16 +17,16 @@ const SidebarItem: React.FC<{ icon: string; text: string; to: string }> = ({ ico
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-50 font-display antialiased overflow-hidden h-screen flex">
-            <aside className="w-64 bg-background-dark border-r border-[#283928] flex flex-col justify-between h-full shrink-0 transition-all duration-300">
+        <div className="bg-[var(--background)] text-[var(--text-primary)] font-display antialiased overflow-hidden h-screen flex">
+            <aside className="w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col justify-between h-full shrink-0 transition-all duration-300">
                 <div>
                     <div className="p-6 flex items-center gap-3">
                         <div className="size-10 rounded-full bg-gradient-to-br from-primary to-[#0b8a0b] flex items-center justify-center text-black font-bold text-xl shadow-[0_0_15px_rgba(19,236,19,0.3)]">
                             F
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="text-white text-lg font-bold leading-tight tracking-tight">FitLogic Pro</h1>
-                            <p className="text-[#9db99d] text-xs font-normal">Admin Console</p>
+                            <h1 className="text-[var(--text-primary)] text-lg font-bold leading-tight tracking-tight">FitLogic Pro</h1>
+                            <p className="text-[var(--text-secondary)] text-xs font-normal">Admin Console</p>
                         </div>
                     </div>
                     <nav className="flex flex-col gap-2 px-4 mt-4">
@@ -38,36 +38,36 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                         <SidebarItem icon="payments" text="Financials" to="#" />
                     </nav>
                 </div>
-                <div className="p-4 border-t border-[#283928]">
-                    <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#9db99d] hover:bg-[#283928] hover:text-white transition-colors group mb-2" href="#">
+                <div className="p-4 border-t border-[var(--border)]">
+                    <a className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-highlight)] hover:text-[var(--text-primary)] transition-colors group mb-2" href="#">
                         <span className="material-symbols-outlined group-hover:rotate-90 transition-transform">settings</span>
                         <span className="text-sm font-medium">Settings</span>
                     </a>
                     <div className="flex items-center gap-3 px-4 py-3">
-                        <div className="size-8 rounded-full bg-cover bg-center border border-[#3b543b] relative overflow-hidden">
+                        <div className="size-8 rounded-full bg-cover bg-center border border-[var(--border)] relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-500 to-gray-700"></div>
                             {/* Fallback avatar */}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-white text-sm font-medium">Alex Morgan</span>
-                            <span className="text-[#9db99d] text-xs">Gym Manager</span>
+                            <span className="text-[var(--text-primary)] text-sm font-medium">Alex Morgan</span>
+                            <span className="text-[var(--text-secondary)] text-xs">Gym Manager</span>
                         </div>
                     </div>
                 </div>
             </aside>
-            <main className="flex-1 flex flex-col h-full overflow-hidden bg-background-dark relative">
-                <header className="h-20 border-b border-[#283928] flex items-center justify-between px-8 bg-background-dark/80 backdrop-blur-md sticky top-0 z-20">
-                    <h2 className="text-white text-2xl font-bold tracking-tight">Dashboard Overview</h2>
+            <main className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--background)] relative">
+                <header className="h-20 border-b border-[var(--border)] flex items-center justify-between px-8 bg-[var(--background)]/80 backdrop-blur-md sticky top-0 z-20">
+                    <h2 className="text-[var(--text-primary)] text-2xl font-bold tracking-tight">Dashboard Overview</h2>
                     <div className="flex items-center gap-6">
                         {/* Search Bar */}
                         <div className="relative w-64 group">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#9db99d] group-focus-within:text-primary transition-colors">search</span>
-                            <input className="w-full bg-[#1a241a] border border-[#283928] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-[#5d7a5d] transition-all" placeholder="Search members, classes..." type="text" />
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-primary transition-colors">search</span>
+                            <input className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-[var(--text-secondary)] transition-all" placeholder="Search members, classes..." type="text" />
                         </div>
                         {/* Notifications */}
-                        <button className="relative p-2 text-[#9db99d] hover:text-white transition-colors rounded-full hover:bg-[#283928]">
+                        <button className="relative p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-highlight)]">
                             <span className="material-symbols-outlined">notifications</span>
-                            <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-background-dark"></span>
+                            <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-[var(--background)]"></span>
                         </button>
                         {/* Action Button */}
                         <button className="bg-primary hover:bg-[#0fd60f] text-black text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(19,236,19,0.2)] flex items-center gap-2">

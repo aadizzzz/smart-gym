@@ -84,7 +84,7 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#111813] flex items-center justify-center p-4 relative overflow-hidden font-display">
+        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4 relative overflow-hidden font-display">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#13ec5b]/5 rounded-full blur-[120px]"></div>
@@ -94,35 +94,35 @@ export const Login: React.FC = () => {
             <div className="w-full max-w-md relative z-10 flex flex-col gap-6">
                 {/* Logo */}
                 <div className="text-center">
-                    <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-[#1e2a23] border border-[#28392e] mb-4 shadow-lg shadow-[#13ec5b]/10">
-                        <span className="material-symbols-outlined text-[#13ec5b] text-3xl">fitness_center</span>
+                    <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-[var(--surface)] border border-[var(--border)] mb-4 shadow-lg shadow-primary/10">
+                        <span className="material-symbols-outlined text-primary text-3xl">fitness_center</span>
                     </div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Smart Gym</h1>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Smart Gym</h1>
                 </div>
 
                 {/* Role Toggles */}
-                <div className="bg-[#1e2a23] p-1 rounded-xl border border-[#28392e] grid grid-cols-2">
+                <div className="bg-[var(--surface)] p-1 rounded-xl border border-[var(--border)] grid grid-cols-2">
                     <button
                         onClick={() => setRole('admin')}
-                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'admin' ? 'bg-[#13ec5b] text-[#052e16] shadow-lg shadow-[#13ec5b]/20' : 'text-[#9db9a6] hover:text-white'}`}
+                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'admin' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                     >
                         Admin Portal
                     </button>
                     <button
                         onClick={() => setRole('member')}
-                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'member' ? 'bg-[#13ec5b] text-[#052e16] shadow-lg shadow-[#13ec5b]/20' : 'text-[#9db9a6] hover:text-white'}`}
+                        className={`text-sm font-bold py-2.5 rounded-lg transition-all ${role === 'member' ? 'bg-primary text-[#052e16] shadow-lg shadow-primary/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                     >
                         Member Area
                     </button>
                 </div>
 
                 {/* Main Card */}
-                <div className="bg-[#1e2a23]/80 backdrop-blur-xl border border-[#28392e] rounded-2xl p-8 shadow-2xl">
+                <div className="bg-[var(--surface)]/80 backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
                     <div className="text-center mb-6">
-                        <h2 className="text-xl font-bold text-white mb-1">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
                             {isSignUp ? 'Create Account' : 'Welcome Back'}
                         </h2>
-                        <p className="text-[#9db9a6] text-sm">
+                        <p className="text-[var(--text-secondary)] text-sm">
                             {isSignUp ? `Sign up as a new ${role}` : `Sign in to your ${role} account`}
                         </p>
                     </div>
@@ -136,14 +136,14 @@ export const Login: React.FC = () => {
                         )}
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-[#9db9a6] ml-1 uppercase tracking-wider">Email</label>
+                            <label className="text-xs font-bold text-[var(--text-secondary)] ml-1 uppercase tracking-wider">Email</label>
                             <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c6f62] group-focus-within:text-[#13ec5b] transition-colors material-symbols-outlined text-[20px]">mail</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-primary transition-colors material-symbols-outlined text-[20px]">mail</span>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-[#111813] border border-[#28392e] rounded-xl px-11 py-3 text-white placeholder-[#5c6f62] focus:outline-none focus:border-[#13ec5b] focus:ring-1 focus:ring-[#13ec5b] transition-all"
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-11 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                                     placeholder="name@example.com"
                                     required
                                 />
@@ -152,16 +152,16 @@ export const Login: React.FC = () => {
 
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center ml-1">
-                                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-wider">Password</label>
-                                {!isSignUp && <a href="#" className="text-xs font-medium text-[#13ec5b] hover:text-[#13ec5b]/80 transition-colors">Forgot?</a>}
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Password</label>
+                                {!isSignUp && <a href="#" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">Forgot?</a>}
                             </div>
                             <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c6f62] group-focus-within:text-[#13ec5b] transition-colors material-symbols-outlined text-[20px]">lock</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-primary transition-colors material-symbols-outlined text-[20px]">lock</span>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-[#111813] border border-[#28392e] rounded-xl px-11 py-3 text-white placeholder-[#5c6f62] focus:outline-none focus:border-[#13ec5b] focus:ring-1 focus:ring-[#13ec5b] transition-all"
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-11 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -171,7 +171,7 @@ export const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#13ec5b] hover:bg-[#0fd60f] text-[#052e16] font-bold py-3.5 rounded-xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-[#13ec5b]/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full bg-primary hover:bg-[#0fd60f] text-[#052e16] font-bold py-3.5 rounded-xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <span className="animate-spin material-symbols-outlined text-[20px]">progress_activity</span>
@@ -181,30 +181,30 @@ export const Login: React.FC = () => {
                         </button>
 
                         <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-[#28392e]"></div>
-                            <span className="flex-shrink-0 mx-4 text-[#5c6f62] text-xs font-medium">OR CONTINUE WITH</span>
-                            <div className="flex-grow border-t border-[#28392e]"></div>
+                            <div className="flex-grow border-t border-[var(--border)]"></div>
+                            <span className="flex-shrink-0 mx-4 text-[var(--text-secondary)] text-xs font-medium">OR CONTINUE WITH</span>
+                            <div className="flex-grow border-t border-[var(--border)]"></div>
                         </div>
 
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
                             disabled={loading}
-                            className="w-full bg-[#111813] hover:bg-[#1a241d] border border-[#28392e] text-white font-medium py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-70"
+                            className="w-full bg-[var(--background)] hover:bg-[var(--surface-highlight)] border border-[var(--border)] text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-70"
                         >
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
                             <span>Google</span>
                         </button>
                     </form>
 
-                    <p className="text-center mt-6 text-[#9db9a6] text-sm">
+                    <p className="text-center mt-6 text-[var(--text-secondary)] text-sm">
                         {isSignUp ? "Already have an account?" : "Don't have an account?"}
                         <button
                             onClick={() => {
                                 setIsSignUp(!isSignUp);
                                 setError('');
                             }}
-                            className="text-[#13ec5b] font-bold hover:underline ml-1 focus:outline-none"
+                            className="text-primary font-bold hover:underline ml-1 focus:outline-none"
                         >
                             {isSignUp ? 'Sign In' : 'Sign Up'}
                         </button>
