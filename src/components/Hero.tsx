@@ -70,19 +70,21 @@ export const Hero: React.FC = () => {
                 </div>
 
                 {/* Hero Image / Visual */}
-                <div className="relative flex-1 w-full max-w-lg lg:max-w-none">
-                    <div className="relative aspect-square w-full rounded-2xl border border-gray-800 bg-surface-dark/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-hidden">
-                        {/* Using a placeholder gradient instead of external image to ensure reliability */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black opacity-80"></div>
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-700 font-bold text-4xl opacity-20 rotate-[-12deg]">
-                            GYM DASHBOARD
+                <div className="relative flex-1 w-full max-w-lg lg:max-w-none pt-10 px-4 sm:px-0">
+                    <div className="relative aspect-square w-full rounded-2xl border border-gray-800 bg-surface-dark/50 p-6 shadow-2xl backdrop-blur-sm lg:aspect-[4/3] overflow-visible">
+                        {/* Background Gradient */}
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-900 to-black opacity-80 overflow-hidden"></div>
+
+                        {/* Decorative Text */}
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-4xl lg:text-5xl opacity-20 rotate-[-12deg] select-none pointer-events-none">
+                            GYM OS
                         </div>
 
-                        {/* Floating Stats Card */}
-                        <div className="absolute -bottom-6 -left-6 right-6 lg:right-auto lg:w-[380px] rounded-xl border border-gray-700 bg-surface-dark p-5 shadow-xl backdrop-blur-md">
+                        {/* Floating Stats Card - Positioned relative to container */}
+                        <div className="absolute -bottom-12 left-4 right-4 sm:-bottom-10 sm:-left-10 sm:right-auto sm:w-[380px] rounded-xl border border-gray-700 bg-surface-dark p-5 shadow-xl backdrop-blur-md z-20">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-text-secondary">Monthly Recurring Revenue</p>
+                                    <p className="text-sm font-medium text-text-secondary">Monthly Recovery</p>
                                     <h3 className="mt-1 text-2xl font-bold text-white">$42,500</h3>
                                 </div>
                                 <div className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-green-400">
@@ -92,18 +94,18 @@ export const Hero: React.FC = () => {
                             </div>
                             {/* Chart SVG */}
                             <div className="h-32 w-full">
-                                <svg className="h-full w-full overflow-visible" viewBox="0 0 380 120">
+                                <svg className="h-full w-full overflow-visible" viewBox="0 0 380 120" preserveAspectRatio="none">
                                     <defs>
                                         <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
-                                            <stop offset="0%" stopColor="#0d7ff2" stopOpacity="0.2"></stop>
-                                            <stop offset="100%" stopColor="#0d7ff2" stopOpacity="0"></stop>
+                                            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2"></stop>
+                                            <stop offset="100%" stopColor="#22c55e" stopOpacity="0"></stop>
                                         </linearGradient>
                                     </defs>
                                     <path d="M0,100 C40,90 80,100 120,70 C160,40 200,60 240,40 C280,20 320,30 380,10 V120 H0 Z" fill="url(#gradient)"></path>
-                                    <path d="M0,100 C40,90 80,100 120,70 C160,40 200,60 240,40 C280,20 320,30 380,10" fill="none" stroke="#0d7ff2" strokeLinecap="round" strokeWidth="3"></path>
-                                    <circle cx="120" cy="70" fill="#111827" r="4" stroke="#0d7ff2" strokeWidth="2"></circle>
-                                    <circle cx="240" cy="40" fill="#111827" r="4" stroke="#0d7ff2" strokeWidth="2"></circle>
-                                    <circle cx="380" cy="10" fill="#111827" r="4" stroke="#0d7ff2" strokeWidth="2"></circle>
+                                    <path d="M0,100 C40,90 80,100 120,70 C160,40 200,60 240,40 C280,20 320,30 380,10" fill="none" stroke="#22c55e" strokeLinecap="round" strokeWidth="3"></path>
+                                    <circle cx="120" cy="70" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
+                                    <circle cx="240" cy="40" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
+                                    <circle cx="380" cy="10" fill="#111827" r="4" stroke="#22c55e" strokeWidth="2"></circle>
                                 </svg>
                             </div>
                         </div>
