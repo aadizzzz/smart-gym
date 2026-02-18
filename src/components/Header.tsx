@@ -52,9 +52,9 @@ export const Header: React.FC = () => {
             </div>
 
             <nav className="hidden md:flex items-center gap-8">
-                <a href="#features" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Features</a>
-                <a href="#pricing" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Pricing</a>
-                <a href="#resources" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Resources</a>
+                <Link to="/features" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Features</Link>
+                <Link to="/pricing" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Pricing</Link>
+                <Link to="/resources" className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-primary">Resources</Link>
             </nav>
 
             <div className="flex items-center gap-3">

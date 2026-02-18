@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
     return (
@@ -6,31 +7,31 @@ export const Footer: React.FC = () => {
             <div className="mx-auto max-w-7xl">
                 <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
                     <div className="col-span-2 lg:col-span-2">
-                        <div className="flex items-center gap-2 mb-4 text-[var(--text-primary)]">
+                        <Link to="/" className="flex items-center gap-2 mb-4 text-[var(--text-primary)]">
                             <span className="material-symbols-outlined text-primary">fitness_center</span>
                             <span className="text-xl font-bold">Smart Gym</span>
-                        </div>
+                        </Link>
                         <p className="max-w-xs text-sm text-[var(--text-secondary)]">The operating system for the modern fitness industry. Built for growth, designed for people.</p>
                     </div>
                     <div className="flex flex-col gap-4">
                         <h4 className="text-sm font-bold text-[var(--text-primary)]">Product</h4>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Features</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Pricing</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Hardware</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">API</a>
+                        <Link to="/features" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Features</Link>
+                        <Link to="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Pricing</Link>
+                        <Link to="/hardware" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Hardware</Link>
+                        <Link to="/api" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">API</Link>
                     </div>
                     <div className="flex flex-col gap-4">
                         <h4 className="text-sm font-bold text-[var(--text-primary)]">Company</h4>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">About</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Careers</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Blog</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Contact</a>
+                        <Link to="/about" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">About</Link>
+                        <Link to="/careers" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Careers</Link>
+                        <Link to="/blog" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Blog</Link>
+                        <Link to="/contact" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Contact</Link>
                     </div>
                     <div className="flex flex-col gap-4">
                         <h4 className="text-sm font-bold text-[var(--text-primary)]">Legal</h4>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Privacy</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Terms</a>
-                        <a href="#" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Security</a>
+                        <Link to="/privacy" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Privacy</Link>
+                        <Link to="/terms" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Terms</Link>
+                        <Link to="/security" className="text-sm text-[var(--text-secondary)] hover:text-primary transition-colors">Security</Link>
                     </div>
                 </div>
                 <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-[var(--border)] pt-8 md:flex-row">

@@ -29,6 +29,18 @@ import { PlatformAdmin } from './components/PlatformAdmin';
 import { NotFound } from './components/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
+import { FeaturesPage } from './pages/public/Features';
+import { PricingPage } from './pages/public/Pricing';
+import { HardwarePage } from './pages/public/Hardware';
+import { APIPage } from './pages/public/API';
+import { AboutPage } from './pages/public/About';
+import { CareersPage } from './pages/public/Careers';
+import { BlogPage } from './pages/public/Blog';
+import { ContactPage } from './pages/public/Contact';
+import { PrivacyPage } from './pages/public/Privacy';
+import { TermsPage } from './pages/public/Terms';
+import { SecurityPage } from './pages/public/Security';
+import { ResourcesPage } from './pages/public/Resources';
 
 const LandingPage: React.FC = () => {
   return (
@@ -68,6 +80,20 @@ const AppRoutes = () => {
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Public Pages */}
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/hardware" element={<HardwarePage />} />
+          <Route path="/api" element={<APIPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/security" element={<SecurityPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
 
           {/* SaaS Core Flows */}
           <Route element={<ProtectedRoute allowedRoles={['gym_admin', 'member', 'trainer', 'super_admin', 'platform_admin']} />}>
