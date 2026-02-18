@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://smart-gym-1nm.pages.dev/sitemap.xml
