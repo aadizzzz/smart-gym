@@ -14,17 +14,20 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { user, role: authRole, loading: authLoading } = useAuth();
+    const { user, role: authRole, gymId, loading: authLoading } = useAuth();
 
     // Auto-redirect if already logged in
     useEffect(() => {
         if (!authLoading && user && authRole) {
-            if (authRole === 'gym_admin') navigate('/admin');
+            if (authRole === 'gym_admin') {
+                if (!gymId) navigate('/onboarding');
+                else navigate('/admin');
+            }
             else if (authRole === 'member') navigate('/dashboard');
             else if (authRole === 'trainer') navigate('/trainer');
             else if (authRole === 'platform_admin' || authRole === 'super_admin') navigate('/platform-admin');
         }
-    }, [user, authRole, authLoading, navigate]);
+    }, [user, authRole, gymId, authLoading, navigate]);
 
     const handleError = (err: any) => {
         const message = err.message || err.error_description || 'Authentication failed.';
@@ -44,28 +47,15 @@ export const Login: React.FC = () => {
 
         try {
             if (isSignUp) {
-                const { data, error: signUpError } = await supabase.auth.signUp({
+                const { error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: { role: selectedRole } // Passed to trigger via raw_user_meta_data
+                    }
                 });
                 if (signUpError) throw signUpError;
-
-                // Create profile for new user
-                if (data.user) {
-                    const { error: profileError } = await supabase
-                        .from('profiles')
-                        .upsert([
-                            {
-                                id: data.user.id,
-                                email: email,
-                                role: selectedRole
-                            }
-                        ]);
-                    if (profileError) {
-                        console.error("Error creating profile:", profileError);
-                        throw new Error(`Account created but profile setup failed: ${profileError.message}. Please contact support.`);
-                    }
-                }
+                // Profile is created automatically by the DB trigger on_auth_user_created
             } else {
                 const { error: signInError } = await supabase.auth.signInWithPassword({
                     email,

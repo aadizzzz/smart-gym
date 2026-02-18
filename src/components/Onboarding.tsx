@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 
 export const Onboarding: React.FC = () => {
-    const { user } = useAuth();
+    const { user, refreshAuth } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [gymName, setGymName] = useState('');
@@ -43,6 +43,9 @@ export const Onboarding: React.FC = () => {
                     .eq('id', user.id);
 
                 if (profileError) throw profileError;
+
+                // 3. Refresh auth context to get the new gym_id
+                await refreshAuth();
             }
 
             // Redirect to admin dashboard on success
