@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const containerVariants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
-        transition: {
-            staggerChildren: 0.05,
-            delayChildren: 0.1
-        }
+        transition: { staggerChildren: 0.05, delayChildren: 0.1 }
     }
 };
 
@@ -19,12 +17,13 @@ const itemVariants = {
     show: { opacity: 1, x: 0 }
 };
 
-const SidebarItem: React.FC<{ icon: string; text: string; to: string; badge?: string; end?: boolean }> = ({ icon, text, to, badge, end }) => {
+const SidebarItem: React.FC<{ icon: string; text: string; to: string; badge?: string; end?: boolean; onClick?: () => void }> = ({ icon, text, to, badge, end, onClick }) => {
     return (
         <motion.div variants={itemVariants}>
             <NavLink
                 to={to}
                 end={end}
+                onClick={onClick}
                 className={({ isActive }) => `relative flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 group ${isActive ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(19,236,19,0.05)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-highlight)]'}`}
             >
                 {({ isActive }) => (
@@ -54,11 +53,17 @@ const SidebarItem: React.FC<{ icon: string; text: string; to: string; badge?: st
     );
 };
 
-export const DashboardSidebar: React.FC = () => {
-    const { gymName, userName } = useAuth();
+const SidebarContent: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) => {
+    const { gymName, userName, signOut } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSignOut = async () => {
+        await signOut();
+        navigate('/login');
+    };
 
     return (
-        <aside className="w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col h-full shrink-0 relative z-30">
+        <>
             {/* Header / Gym Name */}
             <div className="p-6">
                 <div className="flex items-center gap-3 group cursor-pointer">
@@ -79,28 +84,28 @@ export const DashboardSidebar: React.FC = () => {
                 <div>
                     <p className="px-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-3 opacity-50">Core Management</p>
                     <motion.nav variants={containerVariants} initial="hidden" animate="show" className="space-y-1">
-                        <SidebarItem icon="dashboard" text="Dashboard" to="/admin" end={true} />
-                        <SidebarItem icon="groups" text="Members" to="/admin/members" />
-                        <SidebarItem icon="payments" text="Payments & Billing" to="/admin/payments" />
-                        <SidebarItem icon="fitness_center" text="Trainers" to="/admin/trainers" />
-                        <SidebarItem icon="how_to_reg" text="Attendance" to="/admin/attendance" />
+                        <SidebarItem icon="dashboard" text="Dashboard" to="/admin" end={true} onClick={onNavClick} />
+                        <SidebarItem icon="groups" text="Members" to="/admin/members" onClick={onNavClick} />
+                        <SidebarItem icon="payments" text="Payments & Billing" to="/admin/payments" onClick={onNavClick} />
+                        <SidebarItem icon="fitness_center" text="Trainers" to="/admin/trainers" onClick={onNavClick} />
+                        <SidebarItem icon="how_to_reg" text="Attendance" to="/admin/attendance" onClick={onNavClick} />
                     </motion.nav>
                 </div>
 
                 <div>
                     <p className="px-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-3 opacity-50">Growth & Strategy</p>
                     <motion.nav variants={containerVariants} initial="hidden" animate="show" className="space-y-1">
-                        <SidebarItem icon="analytics" text="Analytics" to="/admin/analytics" />
-                        <SidebarItem icon="campaign" text="Leads & Marketing" to="/admin/leads" />
-                        <SidebarItem icon="notifications_active" text="Automation" to="/admin/automation" />
+                        <SidebarItem icon="analytics" text="Analytics" to="/admin/analytics" onClick={onNavClick} />
+                        <SidebarItem icon="campaign" text="Leads & Marketing" to="/admin/leads" onClick={onNavClick} />
+                        <SidebarItem icon="notifications_active" text="Automation" to="/admin/automation" onClick={onNavClick} />
                     </motion.nav>
                 </div>
 
                 <div>
                     <p className="px-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-3 opacity-50">Infrastructure</p>
                     <motion.nav variants={containerVariants} initial="hidden" animate="show" className="space-y-1">
-                        <SidebarItem icon="settings_applications" text="Gym Management" to="/admin/management" />
-                        <SidebarItem icon="settings" text="Settings" to="/admin/settings" />
+                        <SidebarItem icon="settings_applications" text="Gym Management" to="/admin/management" onClick={onNavClick} />
+                        <SidebarItem icon="settings" text="Settings" to="/admin/settings" onClick={onNavClick} />
                     </motion.nav>
                 </div>
             </div>
@@ -111,15 +116,73 @@ export const DashboardSidebar: React.FC = () => {
                     <div className="size-9 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 border border-[var(--border)] flex items-center justify-center text-xs font-bold text-[var(--text-primary)]">
                         {userName ? userName.split(' ').map(n => n[0]).join('') : 'A'}
                     </div>
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex flex-col min-w-0 flex-1">
                         <span className="text-[var(--text-primary)] text-sm font-bold truncate group-hover:text-primary transition-colors">
                             {userName || 'Gym Admin'}
                         </span>
                         <span className="text-[var(--text-secondary)] text-[10px] font-medium opacity-70">Gym Manager</span>
                     </div>
-                    <span className="material-symbols-outlined text-[var(--text-secondary)] text-lg ml-auto group-hover:text-[var(--text-primary)]">unfold_more</span>
+                    <button
+                        onClick={handleSignOut}
+                        title="Sign Out"
+                        className="text-[var(--text-secondary)] hover:text-red-400 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">logout</span>
+                    </button>
                 </div>
             </div>
-        </aside>
+        </>
+    );
+};
+
+export const DashboardSidebar: React.FC = () => {
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    return (
+        <>
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:flex w-64 bg-[var(--surface)] border-r border-[var(--border)] flex-col h-full shrink-0 relative z-30">
+                <SidebarContent />
+            </aside>
+
+            {/* Mobile Hamburger Button */}
+            <button
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden fixed top-4 left-4 z-50 size-10 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex items-center justify-center text-[var(--text-primary)] shadow-lg"
+                aria-label="Open menu"
+            >
+                <span className="material-symbols-outlined text-[20px]">menu</span>
+            </button>
+
+            {/* Mobile Drawer Overlay */}
+            <AnimatePresence>
+                {mobileOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setMobileOpen(false)}
+                            className="lg:hidden fixed inset-0 bg-black/60 z-40"
+                        />
+                        <motion.aside
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            className="lg:hidden fixed left-0 top-0 bottom-0 w-72 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col z-50 shadow-2xl"
+                        >
+                            <button
+                                onClick={() => setMobileOpen(false)}
+                                className="absolute top-4 right-4 size-8 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                            <SidebarContent onNavClick={() => setMobileOpen(false)} />
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+        </>
     );
 };

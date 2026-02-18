@@ -27,31 +27,35 @@ export const Members: React.FC = () => {
             if (!gymId) return;
 
             try {
-                // In a real scenario, we might want to join with profiles
-                // For now, let's fetch members and their profiles if possible
-                const { data, error } = await supabase
+                // Step 1: Fetch all members for this gym
+                const { data: membersData, error: membersError } = await supabase
                     .from('members')
-                    .select('*, profiles:user_id(email, role)')
+                    .select('id, user_id, gym_id, status, membership_plan, join_date, expiry_date')
                     .eq('gym_id', gymId);
 
-                if (error) throw error;
+                if (membersError) throw membersError;
+                if (!membersData || membersData.length === 0) {
+                    setMembers([]);
+                    setLoading(false);
+                    return;
+                }
 
-                // Transform data to match interface
-                const mappedMembers = (data || []).map((m: {
-                    id: string;
-                    user_id: string;
-                    gym_id: string;
-                    status: string;
-                    membership_plan: string;
-                    join_date: string;
-                    expiry_date: string;
-                    profiles: { email: string; role: string; } | null
-                }) => ({
+                // Step 2: Fetch profiles for those user_ids
+                const userIds = membersData.map(m => m.user_id);
+                const { data: profilesData } = await supabase
+                    .from('profiles')
+                    .select('id, email, role')
+                    .in('id', userIds);
+
+                // Step 3: Merge
+                const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
+                const merged = membersData.map(m => ({
                     ...m,
-                    profile: m.profiles || undefined
+                    expiry_date: m.expiry_date ?? '',
+                    profile: profileMap.get(m.user_id) ?? undefined,
                 }));
 
-                setMembers(mappedMembers);
+                setMembers(merged);
             } catch (err) {
                 console.error('Error fetching members:', err);
             } finally {
@@ -63,8 +67,8 @@ export const Members: React.FC = () => {
     }, [gymId]);
 
     const filteredMembers = members.filter(m =>
-        m.profile?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.membership_plan.toLowerCase().includes(searchTerm.toLowerCase())
+        m.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.membership_plan?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const deleteMember = async (id: string) => {

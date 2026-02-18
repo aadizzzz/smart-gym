@@ -26,13 +26,14 @@ export const Login: React.FC = () => {
         }
     }, [user, authRole, authLoading, navigate]);
 
-    const handleError = (err: Error) => {
-        if (err.message === 'Invalid login credentials') {
+    const handleError = (err: any) => {
+        const message = err.message || err.error_description || 'Authentication failed.';
+        if (message === 'Invalid login credentials') {
             setError('Invalid email or password.');
-        } else if (err.message.includes('already registered')) {
+        } else if (message.includes('already registered')) {
             setError('Email is already registered. Please login.');
         } else {
-            setError(err.message || 'Authentication failed. Please try again.');
+            setError(message);
         }
     };
 
@@ -60,7 +61,10 @@ export const Login: React.FC = () => {
                                 role: selectedRole
                             }
                         ]);
-                    if (profileError) console.error("Error creating profile:", profileError);
+                    if (profileError) {
+                        console.error("Error creating profile:", profileError);
+                        throw new Error(`Account created but profile setup failed: ${profileError.message}. Please contact support.`);
+                    }
                 }
             } else {
                 const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -70,9 +74,10 @@ export const Login: React.FC = () => {
                 if (signInError) throw signInError;
             }
             // Navigation handled by useEffect
-        } catch (err: unknown) {
+        } catch (err: any) {
             console.error("Auth error:", err);
-            handleError(err as Error);
+            handleError(err);
+        } finally {
             setLoading(false);
         }
     };

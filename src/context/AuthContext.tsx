@@ -55,6 +55,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (profileError) throw profileError;
 
+            console.log("AuthContext Fetched Profile:", profile);
+
             const userRole = profile?.role ?? 'member';
             const userGymId = profile?.gym_id ?? null;
             // Removed full_name since it doesn't exist in the table apparently
@@ -148,4 +150,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             {children}
         </AuthContext.Provider>
     );
+};
+
+export const useAuth = () => {
+    const context = React.useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };

@@ -3,11 +3,14 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
+import { CurrencyProvider } from './context/CurrencyContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <AuthProvider>
-      <App />
+      <CurrencyProvider>
+        <App />
+      </CurrencyProvider>
     </AuthProvider>
   </ThemeProvider>,
 )

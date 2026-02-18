@@ -19,6 +19,11 @@ import { Automation } from './pages/Automation';
 import { Settings } from './pages/Settings';
 import { ChooseGym } from './components/ChooseGym';
 import { ChoosePlan } from './components/ChoosePlan';
+import { ChooseGoals } from './components/ChooseGoals';
+import { MemberProfile } from './pages/MemberProfile';
+import { MemberHome } from './pages/MemberHome';
+import { MemberExercises } from './pages/MemberExercises';
+import { MemberLayout } from './components/MemberLayout';
 import { TrainerDashboard } from './components/TrainerDashboard';
 import { PlatformAdmin } from './components/PlatformAdmin';
 import { NotFound } from './components/NotFound';
@@ -69,6 +74,7 @@ const AppRoutes = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/choose-gym" element={<ChooseGym />} />
             <Route path="/choose-plan" element={<ChoosePlan />} />
+            <Route path="/choose-goals" element={<ChooseGoals />} />
           </Route>
 
           {/* Protected Admin Routes */}
@@ -89,13 +95,12 @@ const AppRoutes = () => {
 
           {/* Protected Member Routes */}
           <Route element={<ProtectedRoute allowedRoles={['member']} />}>
-            <Route path="/dashboard" element={
-              <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
-                <span className="material-symbols-outlined text-6xl text-primary mb-6">dashboard</span>
-                <h1 className="text-4xl font-extrabold mb-4 text-[var(--text-primary)] tracking-tight">Welcome to Your Dashboard</h1>
-                <p className="text-[var(--text-secondary)] max-w-md text-lg">Your membership is active! Explore your gym's features and track your workouts.</p>
-              </div>
-            } />
+            <Route element={<MemberLayout />}>
+              <Route path="/member/home" element={<MemberHome />} />
+              <Route path="/member/exercises" element={<MemberExercises />} />
+              <Route path="/member/profile" element={<MemberProfile />} />
+              <Route path="/dashboard" element={<MemberHome />} />
+            </Route>
           </Route>
 
           {/* Protected Trainer Routes */}

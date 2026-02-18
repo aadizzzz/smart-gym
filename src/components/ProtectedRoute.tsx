@@ -33,22 +33,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     }
 
     if (role === 'member') {
+        const onboardingPaths = ['/choose-gym', '/choose-plan', '/choose-goals'];
+        const isOnboarding = onboardingPaths.includes(location.pathname);
+
         if (!gymId && location.pathname !== '/choose-gym') {
             return <Navigate to="/choose-gym" replace />;
         }
-        if (gymId && !hasMembership && location.pathname !== '/choose-plan' && location.pathname !== '/choose-gym') {
+        if (gymId && !hasMembership && !isOnboarding) {
             return <Navigate to="/choose-plan" replace />;
         }
-        // Redirect away from selection pages if already set
-        if (gymId && location.pathname === '/choose-gym') {
-            return <Navigate to="/dashboard" replace />;
-        }
-        if (hasMembership && location.pathname === '/choose-plan') {
-            return <Navigate to="/dashboard" replace />;
+        // Redirect away from onboarding pages if already set up
+        if (gymId && hasMembership && isOnboarding) {
+            return <Navigate to="/member/home" replace />;
         }
     }
 
     if (allowedRoles && role && !allowedRoles.includes(role)) {
+        console.log("Redirecting: Role not allowed", role, allowedRoles);
         // Redirect to appropriate dashboard if role is not allowed for this route
         if (role === 'gym_admin') return <Navigate to="/admin" replace />;
         if (role === 'member') return <Navigate to="/dashboard" replace />;

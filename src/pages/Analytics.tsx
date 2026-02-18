@@ -1,233 +1,326 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { motion } from 'framer-motion';
+import { useCurrency } from '../context/CurrencyContext';
+
+interface AnalyticsData {
+    revenue: number;
+    activeMembers: number;
+    avgVisitDuration: number;
+    engagement: {
+        daily: number;
+        weekly: number;
+        inactive: number;
+        score: number;
+    };
+    peakHours: { time: string; count: number; heightPct: number; isPeak: boolean }[];
+    weeklyTrend: { week: string; count: number }[];
+}
+
+const container = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+};
+const item = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35 } }
+};
 
 export const Analytics: React.FC = () => {
     const { gymId } = useAuth();
-    const [revenue, setRevenue] = useState(0);
-    const [activeMembers, setActiveMembers] = useState(0);
+    const [data, setData] = useState<AnalyticsData>({
+        revenue: 0,
+        activeMembers: 0,
+        avgVisitDuration: 0,
+        engagement: { daily: 0, weekly: 0, inactive: 0, score: 0 },
+        peakHours: [],
+        weeklyTrend: []
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
             if (!gymId) return;
-
             try {
-                // Fetch Total Revenue
-                const { data: payments, error: pError } = await supabase
+                const today = new Date();
+                const thirtyDaysAgo = new Date(today);
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+
+                // Revenue
+                const { data: payments } = await supabase
                     .from('payments')
                     .select('amount')
                     .eq('gym_id', gymId)
                     .eq('status', 'paid');
+                const totalRev = (payments || []).reduce((acc: number, p: { amount: number }) => acc + Number(p.amount), 0);
 
-                if (pError) throw pError;
-                const totalRev = (payments || []).reduce((acc: number, p: { amount: number }) => acc + p.amount, 0);
-                setRevenue(totalRev);
-
-                // Fetch Active Members
-                const { count, error: mError } = await supabase
+                // Active Members
+                const { count: activeMembersCount } = await supabase
                     .from('members')
                     .select('*', { count: 'exact', head: true })
                     .eq('gym_id', gymId)
-                    .eq('status', 'active');
+                    .eq('status', 'Active');
+                const activeCount = activeMembersCount || 1;
 
-                if (mError) throw mError;
-                setActiveMembers(count || 0);
+                // Attendance
+                const { data: attendance } = await supabase
+                    .from('attendance')
+                    .select('member_id, check_in_time, check_out_time')
+                    .eq('gym_id', gymId)
+                    .gte('check_in_time', thirtyDaysAgo.toISOString());
+                const records = attendance || [];
 
+                // Avg Duration
+                let totalDuration = 0, durationCount = 0;
+                records.forEach(r => {
+                    if (r.check_out_time && r.check_in_time) {
+                        const mins = (new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime()) / 60000;
+                        if (mins > 0 && mins < 300) { totalDuration += mins; durationCount++; }
+                    }
+                });
+                const avgDuration = durationCount > 0 ? Math.round(totalDuration / durationCount) : 0;
+
+                // Engagement
+                const now = today.getTime();
+                const daily = new Set(records.filter(r => new Date(r.check_in_time).getTime() > now - 86400000).map(r => r.member_id)).size;
+                const weekly = new Set(records.filter(r => new Date(r.check_in_time).getTime() > now - 604800000).map(r => r.member_id)).size;
+                const monthly = new Set(records.map(r => r.member_id)).size;
+                const inactive = Math.max(0, activeCount - monthly);
+
+                // Peak Hours
+                const hourCounts = new Array(24).fill(0);
+                records.forEach(r => { hourCounts[new Date(r.check_in_time).getHours()]++; });
+                const maxH = Math.max(...hourCounts, 1);
+                const peakHours = [6, 8, 10, 12, 14, 16, 18, 20, 22].map(h => {
+                    const count = hourCounts[h];
+                    const heightPct = Math.round((count / maxH) * 100);
+                    return {
+                        time: `${h > 12 ? h - 12 : h}${h >= 12 ? 'pm' : 'am'}`,
+                        count,
+                        heightPct: Math.max(8, heightPct),
+                        isPeak: heightPct === 100 && count > 0
+                    };
+                });
+
+                // Weekly Trend
+                const weeklyTrend = [];
+                for (let i = 3; i >= 0; i--) {
+                    const start = new Date(today); start.setDate(today.getDate() - i * 7 - 6); start.setHours(0, 0, 0, 0);
+                    const end = new Date(today); end.setDate(today.getDate() - i * 7); end.setHours(23, 59, 59, 999);
+                    const count = records.filter(r => { const t = new Date(r.check_in_time); return t >= start && t <= end; }).length;
+                    weeklyTrend.push({ week: `Week ${4 - i}`, count });
+                }
+
+                setData({
+                    revenue: totalRev,
+                    activeMembers: activeCount,
+                    avgVisitDuration: avgDuration,
+                    engagement: {
+                        daily: Math.round((daily / activeCount) * 100),
+                        weekly: Math.round((weekly / activeCount) * 100),
+                        inactive: Math.round((inactive / activeCount) * 100),
+                        score: Math.min(100, Math.round((weekly / activeCount) * 100))
+                    },
+                    peakHours,
+                    weeklyTrend
+                });
             } catch (err) {
-                console.error('Error fetching analytics:', err);
+                console.error('Analytics fetch error:', err);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchAnalytics();
     }, [gymId]);
 
+    const maxWeekly = Math.max(...data.weeklyTrend.map(w => w.count), 1);
+    const { currency } = useCurrency();
+
     return (
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-            <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-4 text-[var(--text-primary)]">
-                        <div className="bg-primary/20 p-2 rounded-lg text-primary">
-                            <span className="material-symbols-outlined">monitoring</span>
-                        </div>
-                        <h2 className="text-[var(--text-primary)] text-xl font-bold leading-tight tracking-tight">Performance Analytics</h2>
+        <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            style={{ padding: '1rem' }}
+        >
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+                {/* Page Header */}
+                <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    <div style={{ background: 'rgba(19,236,91,0.15)', padding: '8px', borderRadius: '10px', color: '#13ec5b', flexShrink: 0 }}>
+                        <span className="material-symbols-outlined">monitoring</span>
                     </div>
-                </div>
+                    <h2 style={{ color: 'var(--text-primary)', fontSize: 'clamp(1.1rem, 4vw, 1.4rem)', fontWeight: 700, margin: 0 }}>
+                        Performance Analytics
+                    </h2>
+                </motion.div>
 
                 {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex flex-col gap-1 rounded-2xl p-6 bg-[var(--surface)] border border-[var(--border)] shadow-sm hover:border-primary/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                            <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-wider">Total Revenue</p>
-                            <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
-                                <span className="material-symbols-outlined text-[20px]">attach_money</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                    {/* Revenue */}
+                    <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total Revenue</span>
+                            <div style={{ background: 'rgba(19,236,91,0.15)', padding: '6px', borderRadius: '8px', color: '#13ec5b' }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>attach_money</span>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-baseline gap-2">
-                            <p className="text-[var(--text-primary)] text-3xl font-bold tracking-tight">
-                                {loading ? '...' : `$${revenue.toLocaleString()}`}
-                            </p>
+                        <div style={{ color: 'var(--text-primary)', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
+                            {loading ? '—' : `${currency.symbol}${totalRev(data.revenue)}`}
                         </div>
-                        <p className="text-[var(--text-tertiary)] text-xs mt-1">Total collected</p>
-                    </div>
-                    <div className="flex flex-col gap-1 rounded-2xl p-6 bg-[var(--surface)] border border-[var(--border)] shadow-sm hover:border-primary/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                            <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-wider">Active Members</p>
-                            <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
-                                <span className="material-symbols-outlined text-[20px]">groups</span>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '6px' }}>Total collected</div>
+                    </motion.div>
+
+                    {/* Active Members */}
+                    <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Members</span>
+                            <div style={{ background: 'rgba(19,236,91,0.15)', padding: '6px', borderRadius: '8px', color: '#13ec5b' }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>group</span>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-baseline gap-2">
-                            <p className="text-[var(--text-primary)] text-3xl font-bold tracking-tight">
-                                {loading ? '...' : activeMembers.toLocaleString()}
-                            </p>
+                        <div style={{ color: 'var(--text-primary)', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
+                            {loading ? '—' : data.activeMembers}
                         </div>
-                        <p className="text-[var(--text-tertiary)] text-xs mt-1">Current members</p>
-                    </div>
-                    <div className="flex flex-col gap-1 rounded-2xl p-6 bg-[var(--surface)] border border-[var(--border)] shadow-sm hover:border-primary/30 transition-colors">
-                        <div className="flex justify-between items-start">
-                            <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-wider">Avg Visit Duration</p>
-                            <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
-                                <span className="material-symbols-outlined text-[20px]">timer</span>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '6px' }}>Current members</div>
+                    </motion.div>
+
+                    {/* Avg Visit */}
+                    <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Avg Visit Duration</span>
+                            <div style={{ background: 'rgba(19,236,91,0.15)', padding: '6px', borderRadius: '8px', color: '#13ec5b' }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>timer</span>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-baseline gap-2">
-                            <p className="text-[var(--text-primary)] text-3xl font-bold tracking-tight">64m</p>
+                        <div style={{ color: 'var(--text-primary)', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
+                            {loading ? '—' : `${data.avgVisitDuration}m`}
                         </div>
-                        <p className="text-[var(--text-tertiary)] text-xs mt-1">Est. baseline</p>
-                    </div>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '6px' }}>Based on check-outs</div>
+                    </motion.div>
                 </div>
 
-                {/* Charts Row 1 */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Member Churn Probability */}
-                    <div className="col-span-1 lg:col-span-2 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 className="text-[var(--text-primary)] text-lg font-bold">Member Churn Probability</h3>
-                                <p className="text-[var(--text-secondary)] text-sm">Risk analysis based on attendance patterns</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="size-2 rounded-full bg-[#fa5538]"></div>
-                                    <span className="text-xs text-[var(--text-secondary)] font-medium">High Risk</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <div className="size-2 rounded-full bg-primary"></div>
-                                    <span className="text-xs text-[var(--text-secondary)] font-medium">Stable</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-end min-h-[200px]">
-                            <div className="flex items-end justify-between gap-4 h-[180px] w-full relative">
-                                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                                    <div className="w-full h-px bg-[#28392e] border-t border-dashed border-[var(--border)]"></div>
-                                    <div className="w-full h-px bg-[#28392e] border-t border-dashed border-[var(--border)]"></div>
-                                    <div className="w-full h-px bg-[#28392e] border-t border-dashed border-[var(--border)]"></div>
-                                    <div className="w-full h-px bg-[#28392e] border-t border-dashed border-[var(--border)]"></div>
-                                </div>
-                                <svg className="absolute bottom-0 left-0 right-0 h-full w-full overflow-visible z-10" preserveAspectRatio="none" viewBox="0 0 100 50">
-                                    <defs>
-                                        <linearGradient id="churnGradient" x1="0" x2="0" y1="0" y2="1">
-                                            <stop offset="0%" stopColor="#13ec5b" stopOpacity="0.2"></stop>
-                                            <stop offset="100%" stopColor="#13ec5b" stopOpacity="0"></stop>
-                                        </linearGradient>
-                                    </defs>
-                                    <path d="M0,45 Q10,40 20,42 T40,30 T60,35 T80,20 T100,25 V50 H0 Z" fill="url(#churnGradient)"></path>
-                                    <path d="M0,45 Q10,40 20,42 T40,30 T60,35 T80,20 T100,25" fill="none" stroke="#13ec5b" strokeLinecap="round" strokeWidth="0.8" vectorEffect="non-scaling-stroke"></path>
-                                    <circle cx="80" cy="20" fill="#1e2a23" r="1.5" stroke="#fa5538" strokeWidth="0.8" vectorEffect="non-scaling-stroke"></circle>
-                                </svg>
-                            </div>
-                            <div className="flex justify-between mt-4 px-2">
-                                <span className="text-[11px] text-[var(--text-tertiary)] font-semibold">Week 1</span>
-                                <span className="text-[11px] text-[var(--text-tertiary)] font-semibold">Week 2</span>
-                                <span className="text-[11px] text-[var(--text-tertiary)] font-semibold">Week 3</span>
-                                <span className="text-[11px] text-[var(--text-tertiary)] font-semibold">Week 4</span>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Engagement Score */}
-                    <div className="col-span-1 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col">
-                        <h3 className="text-[var(--text-primary)] text-lg font-bold mb-1">Engagement Score</h3>
-                        <p className="text-[var(--text-secondary)] text-sm mb-6">Member activity breakdown</p>
-                        <div className="flex-1 flex items-center justify-center relative min-h-[200px]">
-                            <div className="relative size-48 rounded-full" style={{ background: 'conic-gradient(#13ec5b 0% 65%, #ffffff 65% 85%, #3e5346 85% 100%)' }}>
-                                <div className="absolute inset-4 bg-[var(--surface)] rounded-full flex flex-col items-center justify-center z-10">
-                                    <span className="text-4xl font-extrabold text-[var(--text-primary)]">78%</span>
-                                    <span className="text-xs text-[var(--text-secondary)] font-medium uppercase tracking-wide mt-1">Avg Score</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex flex-col gap-2">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-2.5 rounded-sm bg-primary"></div>
-                                    <span className="text-sm text-[var(--text-secondary)]">Daily Users</span>
-                                </div>
-                                <span className="text-sm text-[var(--text-primary)] font-bold">65%</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-2.5 rounded-sm bg-white"></div>
-                                    <span className="text-sm text-[var(--text-secondary)]">Weekly</span>
-                                </div>
-                                <span className="text-sm text-[var(--text-primary)] font-bold">20%</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-2.5 rounded-sm bg-[var(--surface-highlight)]"></div>
-                                    <span className="text-sm text-[var(--text-secondary)]">Inactive</span>
-                                </div>
-                                <span className="text-sm text-[var(--text-primary)] font-bold">15%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* Charts Row: Attendance + Engagement */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
 
-                {/* Peak Hour Traffic */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="col-span-1 lg:col-span-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
-                            <div>
-                                <h3 className="text-[var(--text-primary)] text-lg font-bold">Peak Hour Traffic</h3>
-                                <p className="text-[var(--text-secondary)] text-sm">Average gym capacity by hour</p>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-[var(--text-secondary)] text-sm">Peak:</span>
-                                <span className="text-2xl font-bold text-[var(--text-primary)]">82%</span>
-                                <span className="text-sm text-[var(--text-secondary)]">at 6 PM</span>
-                            </div>
-                        </div>
-                        <div className="h-[220px] w-full flex items-end justify-between gap-2 sm:gap-4 px-2">
-                            {[
-                                { time: '6am', height: '15%' },
-                                { time: '8am', height: '35%' },
-                                { time: '10am', height: '45%' },
-                                { time: '12pm', height: '40%' },
-                                { time: '2pm', height: '30%' },
-                                { time: '4pm', height: '55%' },
-                                { time: '6pm', height: '82%', isPeak: true },
-                                { time: '8pm', height: '70%' },
-                                { time: '10pm', height: '40%' }
-                            ].map((bar, index) => (
-                                <div key={index} className="flex flex-col items-center gap-2 flex-1 group">
-                                    <div
-                                        className={`w-full rounded-t-sm relative transition-all duration-300 ${bar.isPeak ? 'bg-primary shadow-[0_0_15px_rgba(19,236,91,0.3)]' : 'bg-[#28392e] group-hover:bg-primary/50'}`}
-                                        style={{ height: bar.height }}
-                                    >
-                                        <div className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--background)] text-[var(--text-primary)] text-xs py-1 px-2 rounded border border-[var(--border)] ${!bar.isPeak && 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
-                                            {bar.height}
-                                        </div>
+                    {/* Attendance Trend */}
+                    <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}>
+                        <h3 style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, margin: '0 0 4px 0' }}>Attendance Trend</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '0 0 20px 0' }}>Weekly check-ins for the last 4 weeks</p>
+                        <div style={{ height: '160px', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                            {data.weeklyTrend.length > 0 ? data.weeklyTrend.map((w, i) => {
+                                const h = Math.max(6, Math.round((w.count / maxWeekly) * 100));
+                                return (
+                                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%', justifyContent: 'flex-end' }}>
+                                        <div style={{ width: '100%', height: `${h}%`, background: 'rgba(19,236,91,0.25)', borderRadius: '6px 6px 0 0', transition: 'height 0.4s ease' }} />
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px', whiteSpace: 'nowrap' }}>{w.week}</span>
                                     </div>
-                                    <span className={`text-[10px] sm:text-xs font-medium ${bar.isPeak ? 'text-primary font-bold' : 'text-[var(--text-tertiary)]'}`}>{bar.time}</span>
+                                );
+                            }) : [1, 2, 3, 4].map(i => (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%', justifyContent: 'flex-end' }}>
+                                    <div style={{ width: '100%', height: '30%', background: 'var(--surface-highlight)', borderRadius: '6px 6px 0 0', animation: 'pulse 1.5s infinite' }} />
+                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>—</span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    {/* Engagement Score */}
+                    <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}>
+                        <h3 style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, margin: '0 0 4px 0' }}>Engagement Score</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '0 0 20px 0' }}>Active member participation</p>
+
+                        {/* Donut — fixed inline px so it never collapses */}
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                            <div style={{
+                                width: '152px',
+                                height: '152px',
+                                borderRadius: '50%',
+                                flexShrink: 0,
+                                background: `conic-gradient(#13ec5b 0% ${data.engagement.score}%, #1e3a2a ${data.engagement.score}% 100%)`,
+                                position: 'relative'
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    inset: '16px',
+                                    background: 'var(--surface)',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <span style={{ color: 'var(--text-primary)', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>
+                                        {data.engagement.score}%
+                                    </span>
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '2px' }}>
+                                        Weekly Active
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Legend */}
+                        {[
+                            { label: 'Daily Users', val: data.engagement.daily, color: '#13ec5b' },
+                            { label: 'Weekly Users', val: data.engagement.weekly, color: 'rgba(19,236,91,0.5)' },
+                            { label: 'Inactive (30d)', val: data.engagement.inactive, color: '#1e3a2a' },
+                        ].map(row => (
+                            <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: row.color, flexShrink: 0 }} />
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{row.label}</span>
+                                </div>
+                                <span style={{ color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700 }}>{row.val}%</span>
+                            </div>
+                        ))}
+                    </motion.div>
+                </div>
+
+                {/* Peak Hour Traffic — always scrollable */}
+                <motion.div variants={item} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, margin: '0 0 4px 0' }}>Peak Hour Traffic</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '0 0 20px 0' }}>Check-in distribution by hour (last 30 days)</p>
+
+                    {/* Scroll wrapper — overflow-x: auto with explicit minWidth on inner */}
+                    <div style={{ overflowX: 'auto', overflowY: 'visible', WebkitOverflowScrolling: 'touch' }}>
+                        <div style={{ minWidth: '480px', height: '180px', display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+                            {data.peakHours.length > 0 ? data.peakHours.map((bar, i) => (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
+                                    <div style={{
+                                        width: '100%',
+                                        height: `${bar.heightPct}%`,
+                                        background: bar.isPeak ? '#13ec5b' : '#1e3a2a',
+                                        borderRadius: '6px 6px 0 0',
+                                        boxShadow: bar.isPeak ? '0 0 12px rgba(19,236,91,0.4)' : 'none',
+                                        transition: 'height 0.4s ease'
+                                    }} />
+                                    <span style={{
+                                        color: bar.isPeak ? '#13ec5b' : 'var(--text-tertiary)',
+                                        fontSize: '11px',
+                                        fontWeight: bar.isPeak ? 700 : 400,
+                                        whiteSpace: 'nowrap'
+                                    }}>{bar.time}</span>
+                                </div>
+                            )) : Array.from({ length: 9 }).map((_, i) => (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
+                                    <div style={{ width: '100%', height: '30%', background: 'var(--surface-highlight)', borderRadius: '6px 6px 0 0' }} />
+                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>—</span>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
+                </motion.div>
+
             </div>
-        </div>
+        </motion.div>
     );
 };
+
+// Helper to format revenue
+function totalRev(n: number): string {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+    return n.toFixed(0);
+}

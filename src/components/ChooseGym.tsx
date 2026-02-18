@@ -38,21 +38,66 @@ export const ChooseGym: React.FC = () => {
     }, []);
 
     const handleSelect = async (gymId: string) => {
-        if (!user) return;
+        console.log("Selecting gym:", gymId);
+        if (!user) {
+            console.error("No user found");
+            return;
+        }
         setSelectingId(gymId);
         try {
-            const { error } = await supabase
+            console.log("Updating profile...");
+            // 1. Update Profile with Gym ID
+            const { error: profileError } = await supabase
                 .from('profiles')
                 .update({ gym_id: gymId })
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (profileError) {
+                console.error("Profile update error:", profileError);
+                throw profileError;
+            }
 
+            console.log("Checking existing member...");
+            // 2. Add to Members Table (Auto-join)
+            // Check if already a member first to avoid duplicates
+            const { data: existingMember, error: fetchError } = await supabase
+                .from('members')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('gym_id', gymId)
+                .maybeSingle();
+
+            if (fetchError) {
+                console.error("Member fetch error:", fetchError);
+            }
+
+            if (!existingMember) {
+                console.log("Inserting new member...");
+                const { error: memberError } = await supabase
+                    .from('members')
+                    .insert({
+                        user_id: user.id,
+                        gym_id: gymId,
+                        status: 'active', // Pending admin approval logic can be added here later if needed
+                        join_date: new Date().toISOString(),
+                        membership_plan: 'Basic' // Default plan
+                    });
+
+                if (memberError) {
+                    console.error("Member insert error:", memberError);
+                    throw memberError;
+                }
+            } else {
+                console.log("Member already exists");
+            }
+
+            console.log("Refreshing auth...");
             await refreshAuth();
-            navigate('/choose-plan');
-        } catch (err) {
+            console.log("Navigating to choose-goals...");
+            navigate('/choose-goals'); // Changed from /choose-plan
+        } catch (err: any) {
             console.error('Error selecting gym:', err);
-            alert('Failed to select gym. Please try again.');
+            alert(`Failed to select gym: ${err.message || 'Unknown error'}`);
         } finally {
             setSelectingId(null);
         }
