@@ -24,6 +24,8 @@ import { ChooseGoals } from './components/ChooseGoals';
 import { MemberProfile } from './pages/MemberProfile';
 import { MemberHome } from './pages/MemberHome';
 import { MemberExercises } from './pages/MemberExercises';
+import { MemberSettings } from './pages/MemberSettings';
+import { MemberPayments } from './pages/MemberPayments';
 import { MemberLayout } from './components/MemberLayout';
 import { TrainerDashboard } from './components/TrainerDashboard';
 import { PlatformAdmin } from './components/PlatformAdmin';
@@ -121,12 +123,15 @@ const AppRoutes = () => {
             </Route>
           </Route>
 
+
           {/* Protected Member Routes */}
           <Route element={<ProtectedRoute allowedRoles={['member']} />}>
             <Route element={<MemberLayout />}>
               <Route path="/member/home" element={<MemberHome />} />
               <Route path="/member/exercises" element={<MemberExercises />} />
               <Route path="/member/profile" element={<MemberProfile />} />
+              <Route path="/member/payments" element={<MemberPayments />} />
+              <Route path="/member/settings" element={<MemberSettings />} />
               <Route path="/dashboard" element={<MemberHome />} />
             </Route>
           </Route>

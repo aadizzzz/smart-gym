@@ -9,6 +9,8 @@ type AuthState = {
     userName: string | null;
     gymName: string | null;
     hasMembership: boolean;
+    themePreference: 'light' | 'dark' | 'system';
+    accentColor: string;
     loading: boolean;
 };
 
@@ -28,6 +30,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         userName: null,
         gymName: null,
         hasMembership: false,
+        themePreference: 'system',
+        accentColor: 'green',
         loading: true,
     });
 
@@ -40,6 +44,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             userName: null,
             gymName: null,
             hasMembership: false,
+            themePreference: 'system',
+            accentColor: 'green',
             loading: false,
         });
     }
@@ -49,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // 1. Fetch Profile
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('role, gym_id')
+                .select('role, gym_id, theme_preference, accent_color')
                 .eq('id', userId)
                 .maybeSingle();
 
@@ -103,6 +109,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 userName: full_name,
                 gymName: fetchedGymName,
                 hasMembership: fetchedHasMembership,
+                themePreference: (profile?.theme_preference as any) || 'system',
+                accentColor: profile?.accent_color || 'green',
                 loading: false,
             }));
 
@@ -166,6 +174,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             await fetchUserData(state.user.id);
         }
     };
+
+    // Apply Theme & Accent Color Changes
+    useEffect(() => {
+        if (state.loading) return;
+
+        const root = document.documentElement;
+
+        // Apply Dark/Light Mode
+        if (state.themePreference === 'dark') {
+            root.classList.add('dark');
+        } else if (state.themePreference === 'light') {
+            root.classList.remove('dark');
+        } else {
+            // System preference
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.classList.toggle('dark', isDark);
+        }
+
+        // Apply Accent Color
+        const colorMap: Record<string, string> = {
+            green: '#13ec13',
+            blue: '#3b82f6',
+            indigo: '#6366f1',
+            purple: '#a855f7',
+            rose: '#f43f5e',
+            orange: '#f97316'
+        };
+        const hex = colorMap[state.accentColor] || colorMap['green'];
+        root.style.setProperty('--color-primary', hex);
+        root.style.setProperty('--primary', hex);
+
+    }, [state.themePreference, state.accentColor, state.loading]);
 
     return (
         <AuthContext.Provider value={{ ...state, signOut, refreshAuth }}>

@@ -7,6 +7,8 @@ const NAV_ITEMS = [
     { to: '/member/home', icon: 'home', label: 'Home' },
     { to: '/member/exercises', icon: 'fitness_center', label: 'Exercises' },
     { to: '/member/profile', icon: 'person', label: 'Profile' },
+    { to: '/member/payments', icon: 'payments', label: 'Payments' },
+    { to: '/member/settings', icon: 'settings', label: 'Settings' },
 ];
 
 export const MemberLayout: React.FC = () => {

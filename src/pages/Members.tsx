@@ -104,7 +104,7 @@ export const Members: React.FC = () => {
         e.preventDefault();
 
         try {
-            await supabase.functions.invoke('send-email', {
+            const { data, error } = await supabase.functions.invoke('send-email', {
                 body: {
                     to: modalData.email,
                     subject: "Welcome to the Gym! Here is your login link.",
@@ -120,10 +120,20 @@ export const Members: React.FC = () => {
                     fromName: "Gym Admin",
                 }
             });
-            alert(`Invitation email successfully sent to ${modalData.email} via Resend Edge Function!`);
-        } catch (error) {
+
+            if (error) {
+                console.error("Supabase Invoke Error:", error);
+                throw error;
+            }
+            if (data && !data.success) {
+                console.error("Edge Function explicitly returned an error:", data.error);
+                throw new Error(data.error || "Edge Function failed to send email.");
+            }
+
+            alert(`Invitation email successfully sent to ${modalData.email} via Gmail Edge Function!`);
+        } catch (error: any) {
             console.error("Failed to send invitation email:", error);
-            alert("Failed to send invitation email. Check console for details.");
+            alert(`Failed to send email: ${error.message || 'Check console for details.'}`);
         }
 
         setIsAddModalOpen(false);
