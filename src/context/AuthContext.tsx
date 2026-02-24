@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
     }
 
-    const fetchUserData = async (userId: string) => {
+    const fetchUserData = async (userId: string, retries = 0) => {
         try {
             // 1. Fetch Profile
             const { data: profile, error: profileError } = await supabase
@@ -54,6 +54,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 .maybeSingle();
 
             if (profileError) throw profileError;
+
+            // Retry logic if the database trigger is still processing
+            if (!profile && retries < 2) {
+                const delay = 500 * Math.pow(2, retries);
+                console.log(`Profile not found. Retrying in ${delay}ms... (Attempt ${retries + 1}/2)`);
+                setTimeout(() => fetchUserData(userId, retries + 1), delay);
+                return;
+            }
 
             console.log("AuthContext Fetched Profile:", profile);
 
@@ -121,8 +129,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     return { ...prev, user: currentUser, loading: true };
                 });
 
+                // Check for role param from OAuth redirect
+                const params = new URLSearchParams(window.location.search);
+                const roleParam = params.get('role');
+                if (roleParam) {
+                    try {
+                        const { error } = await supabase.rpc('set_initial_oauth_role', { selected_role: roleParam });
+                        if (error) console.error("Failed to set OAuth role on backend:", error);
+                        // Clean URL without refreshing page
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (e) {
+                        console.error("Exception setting OAuth role:", e);
+                    }
+                }
+
                 // Small delay to allow session to settle
-                setTimeout(() => fetchUserData(currentUser.id), 50);
+                setTimeout(() => fetchUserData(currentUser.id, 0), 50);
             } else {
                 clearState();
             }

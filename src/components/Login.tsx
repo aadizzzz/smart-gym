@@ -13,6 +13,7 @@ export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
     const { user, role: authRole, gymId, loading: authLoading } = useAuth();
 
@@ -43,11 +44,12 @@ export const Login: React.FC = () => {
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
         setLoading(true);
 
         try {
             if (isSignUp) {
-                const { error: signUpError } = await supabase.auth.signUp({
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
@@ -55,6 +57,11 @@ export const Login: React.FC = () => {
                     }
                 });
                 if (signUpError) throw signUpError;
+
+                // If email confirmation is required, session will be null
+                if (signUpData.session === null) {
+                    setSuccessMsg('Please check your email to confirm your account.');
+                }
                 // Profile is created automatically by the DB trigger on_auth_user_created
             } else {
                 const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -83,7 +90,7 @@ export const Login: React.FC = () => {
                         access_type: 'offline',
                         prompt: 'consent',
                     },
-                    redirectTo: window.location.origin + '/dashboard',
+                    redirectTo: `${window.location.origin}/dashboard?role=${selectedRole}`,
                 }
             });
             if (googleError) throw googleError;
@@ -139,6 +146,12 @@ export const Login: React.FC = () => {
                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">error</span>
                                 {error}
+                            </div>
+                        )}
+                        {successMsg && (
+                            <div className="bg-[#13ec5b]/10 border border-[#13ec5b]/20 text-[#13ec5b] px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">check_circle</span>
+                                {successMsg}
                             </div>
                         )}
 
@@ -214,6 +227,7 @@ export const Login: React.FC = () => {
                             onClick={() => {
                                 setIsSignUp(!isSignUp);
                                 setError('');
+                                setSuccessMsg('');
                             }}
                             className="text-primary font-bold hover:underline ml-1 focus:outline-none"
                         >
