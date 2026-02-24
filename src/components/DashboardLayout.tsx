@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { DashboardSidebar } from './DashboardSidebar';
 import { useAuth } from '../hooks/useAuth';
+import { AdminNotifications } from './AdminNotifications';
 
 export const DashboardLayout: React.FC = () => {
     const location = useLocation();
@@ -51,10 +52,7 @@ export const DashboardLayout: React.FC = () => {
                         </div>
 
                         {/* Notifications */}
-                        <button className="relative p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-highlight)]">
-                            <span className="material-symbols-outlined">notifications</span>
-                            <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-[var(--background)]"></span>
-                        </button>
+                        <AdminNotifications />
 
                         {/* Global Action Button */}
                         <button className="bg-primary hover:bg-[#0fd60f] text-[#052e16] text-sm font-bold px-3 lg:px-5 py-2 lg:py-2.5 rounded-xl transition-all shadow-[0_8px_20px_rgba(19,236,19,0.15)] flex items-center gap-2 active:scale-95">

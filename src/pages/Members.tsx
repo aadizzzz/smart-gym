@@ -10,6 +10,7 @@ interface Member {
     membership_plan: string;
     join_date: string;
     expiry_date: string;
+    churn_risk: boolean;
     profile?: {
         email: string;
         role: string;
@@ -21,6 +22,13 @@ export const Members: React.FC = () => {
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterTab, setFilterTab] = useState<'all' | 'active' | 'expired' | 'frozen'>('all');
+
+    // Modal states
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+    const [modalData, setModalData] = useState({ email: '', plan: 'Basic', status: 'active' });
 
     useEffect(() => {
         const fetchMembers = async () => {
@@ -30,7 +38,7 @@ export const Members: React.FC = () => {
                 // Step 1: Fetch all members for this gym
                 const { data: membersData, error: membersError } = await supabase
                     .from('members')
-                    .select('id, user_id, gym_id, status, membership_plan, join_date, expiry_date')
+                    .select('id, user_id, gym_id, status, membership_plan, join_date, expiry_date, churn_risk')
                     .eq('gym_id', gymId);
 
                 if (membersError) throw membersError;
@@ -66,10 +74,12 @@ export const Members: React.FC = () => {
         fetchMembers();
     }, [gymId]);
 
-    const filteredMembers = members.filter(m =>
-        m.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.membership_plan?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredMembers = members.filter(m => {
+        const matchesSearch = m.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.membership_plan?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesTab = filterTab === 'all' || m.status === filterTab;
+        return matchesSearch && matchesTab;
+    });
 
     const deleteMember = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this member? This action cannot be undone.')) return;
@@ -90,6 +100,38 @@ export const Members: React.FC = () => {
         }
     };
 
+    const handleAddMember = async (e: React.FormEvent) => {
+        e.preventDefault();
+        alert("Member invitations require a backend email service to generate auth links. This UI is a placeholder for the Edge Function integration.");
+        setIsAddModalOpen(false);
+    };
+
+    const handleEditMember = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMember) return;
+
+        try {
+            const { error } = await supabase
+                .from('members')
+                .update({ status: modalData.status, membership_plan: modalData.plan })
+                .eq('id', selectedMember.id);
+
+            if (error) throw error;
+
+            setMembers(members.map(m => m.id === selectedMember.id ? { ...m, status: modalData.status, membership_plan: modalData.plan } : m));
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Error updating member:', error);
+            alert('Failed to update member.');
+        }
+    };
+
+    const openEditModal = (member: Member) => {
+        setSelectedMember(member);
+        setModalData({ email: member.profile?.email || '', plan: member.membership_plan, status: member.status });
+        setIsEditModalOpen(true);
+    };
+
     const getInitials = (email: string) => email.substring(0, 2).toUpperCase();
 
     const stats = {
@@ -108,7 +150,9 @@ export const Members: React.FC = () => {
                         <h2 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Member Directory</h2>
                         <p className="text-[var(--text-secondary)] mt-1">Manage gym access, memberships, and billing status.</p>
                     </div>
-                    <button className="bg-primary hover:bg-[#0fd60f] text-black px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all active:scale-95">
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-primary hover:bg-[#0fd60f] text-black px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all active:scale-95">
                         <span className="material-symbols-outlined text-lg">add</span>
                         Add Member
                     </button>
@@ -129,8 +173,8 @@ export const Members: React.FC = () => {
                         <span className="text-2xl font-bold text-[var(--text-primary)]">{stats.expired}</span>
                     </div>
                     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 flex flex-col">
-                        <span className="text-blue-400/80 text-xs font-medium uppercase tracking-wider mb-1">Frozen</span>
-                        <span className="text-2xl font-bold text-[var(--text-primary)]">{stats.frozen}</span>
+                        <span className="text-red-500/80 text-xs font-medium uppercase tracking-wider mb-1">Churn Risk</span>
+                        <span className="text-2xl font-bold text-[var(--text-primary)]">{members.filter(m => m.churn_risk).length}</span>
                     </div>
                 </div>
 
@@ -138,10 +182,10 @@ export const Members: React.FC = () => {
                 <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center bg-[var(--surface-highlight)] p-2 rounded-xl border border-[var(--border)]">
                     {/* Tabs */}
                     <div className="flex p-1 bg-[var(--surface)]/50 rounded-lg self-stretch lg:self-auto overflow-x-auto">
-                        <button className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] bg-[var(--surface-highlight)] shadow rounded-md whitespace-nowrap transition-all">All Members</button>
-                        <button className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md whitespace-nowrap transition-all hover:bg-white/5">Active</button>
-                        <button className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md whitespace-nowrap transition-all hover:bg-white/5">Expired</button>
-                        <button className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md whitespace-nowrap transition-all hover:bg-white/5">Frozen</button>
+                        <button onClick={() => setFilterTab('all')} className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all ${filterTab === 'all' ? 'text-[var(--text-primary)] bg-[var(--surface-highlight)] shadow' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'}`}>All Members</button>
+                        <button onClick={() => setFilterTab('active')} className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all ${filterTab === 'active' ? 'text-[var(--text-primary)] bg-[var(--surface-highlight)] shadow' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'}`}>Active</button>
+                        <button onClick={() => setFilterTab('expired')} className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all ${filterTab === 'expired' ? 'text-[var(--text-primary)] bg-[var(--surface-highlight)] shadow' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'}`}>Expired</button>
+                        <button onClick={() => setFilterTab('frozen')} className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all ${filterTab === 'frozen' ? 'text-[var(--text-primary)] bg-[var(--surface-highlight)] shadow' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'}`}>Frozen</button>
                     </div>
                     {/* Search & Filter */}
                     <div className="flex items-center gap-3 w-full lg:w-auto">
@@ -209,7 +253,13 @@ export const Members: React.FC = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">
                                                 {new Date(member.join_date).toLocaleDateString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <td className="px-6 py-4 whitespace-nowrap text-center flex items-center justify-center gap-2">
+                                                {member.churn_risk && (
+                                                    <span className="inline-flex items-center gap-1 bg-red-500/10 text-red-500 text-xs font-bold px-2 py-0.5 rounded-md" title="High Churn Risk">
+                                                        <span className="material-symbols-outlined text-[14px]">warning</span>
+                                                        At Risk
+                                                    </span>
+                                                )}
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${member.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                                                     member.status === 'expired' ? 'bg-primary/10 text-primary border border-primary/20' :
                                                         'bg-blue-500/10 text-blue-400 border border-blue-500/20'
@@ -220,7 +270,11 @@ export const Members: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1.5 rounded hover:bg-white/10 transition-colors">
+                                                    <button
+                                                        onClick={() => openEditModal(member)}
+                                                        className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1.5 rounded hover:bg-white/10 transition-colors"
+                                                        title="Edit Member"
+                                                    >
                                                         <span className="material-symbols-outlined text-xl">edit</span>
                                                     </button>
                                                     <button
@@ -248,6 +302,111 @@ export const Members: React.FC = () => {
             </div>
             {/* Bottom Space for scroll */}
             <div className="h-12"></div>
+
+            {/* Add Member Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--surface-highlight)]/30">
+                            <h3 className="text-xl font-bold text-[var(--text-primary)]">Invite New Member</h3>
+                            <button onClick={() => setIsAddModalOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddMember} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Email Address</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={modalData.email}
+                                    onChange={(e) => setModalData({ ...modalData, email: e.target.value })}
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-primary transition-colors"
+                                    placeholder="member@example.com"
+                                />
+                                <p className="text-[10px] text-[var(--text-secondary)] mt-1">An invitation link will be sent to this email to complete signup securely.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Initial Plan</label>
+                                <select
+                                    value={modalData.plan}
+                                    onChange={(e) => setModalData({ ...modalData, plan: e.target.value })}
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-primary transition-colors appearance-none"
+                                >
+                                    <option value="Basic">Basic ($29/mo)</option>
+                                    <option value="Pro">Pro ($49/mo)</option>
+                                    <option value="Elite">Elite ($99/mo)</option>
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-highlight)] transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="flex-1 bg-primary hover:bg-[#0fd60f] text-black px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                    Send Invite
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Member Modal */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--surface-highlight)]/30">
+                            <h3 className="text-xl font-bold text-[var(--text-primary)]">Edit Member</h3>
+                            <button onClick={() => setIsEditModalOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditMember} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Email (Read Only)</label>
+                                <input
+                                    type="email"
+                                    disabled
+                                    value={modalData.email}
+                                    className="w-full bg-[var(--background)]/50 border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-secondary)] cursor-not-allowed"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Status</label>
+                                <select
+                                    value={modalData.status}
+                                    onChange={(e) => setModalData({ ...modalData, status: e.target.value })}
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-primary transition-colors appearance-none"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="expired">Expired</option>
+                                    <option value="frozen">Frozen</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Plan</label>
+                                <select
+                                    value={modalData.plan}
+                                    onChange={(e) => setModalData({ ...modalData, plan: e.target.value })}
+                                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-primary transition-colors appearance-none"
+                                >
+                                    <option value="Basic">Basic</option>
+                                    <option value="Pro">Pro</option>
+                                    <option value="Elite">Elite</option>
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-highlight)] transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="flex-1 bg-primary hover:bg-[#0fd60f] text-black px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

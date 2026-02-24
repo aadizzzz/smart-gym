@@ -105,6 +105,7 @@ const SidebarContent: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
                     <p className="px-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-3 opacity-50">Infrastructure</p>
                     <motion.nav variants={containerVariants} initial="hidden" animate="show" className="space-y-1">
                         <SidebarItem icon="settings_applications" text="Gym Management" to="/admin/management" onClick={onNavClick} />
+                        <SidebarItem icon="inventory_2" text="Inventory" to="/admin/inventory" onClick={onNavClick} />
                         <SidebarItem icon="settings" text="Settings" to="/admin/settings" onClick={onNavClick} />
                     </motion.nav>
                 </div>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { runGymIntelligenceEngine } from '../services/automation';
 
 interface DashboardStats {
     activeMembers: number;
@@ -48,6 +49,7 @@ export const Dashboard: React.FC = () => {
     });
     const [chartData, setChartData] = useState<ChartData[]>([]);
     const [leads, setLeads] = useState<NewLead[]>([]);
+    const [runningAnalysis, setRunningAnalysis] = useState(false);
 
     useEffect(() => {
         if (gymId) {
@@ -253,9 +255,22 @@ export const Dashboard: React.FC = () => {
                             <h3 className="text-[var(--text-primary)] text-lg font-bold">Revenue Overview</h3>
                             <p className="text-[var(--text-secondary)] text-sm">Income analytics for the last 6 months</p>
                         </div>
-                        <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm bg-[var(--surface-highlight)] px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors">
-                            Last 6 Months <span className="material-symbols-outlined text-[16px]">keyboard_arrow_down</span>
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={async () => {
+                                    if (!gymId) return;
+                                    setRunningAnalysis(true);
+                                    await runGymIntelligenceEngine(gymId);
+                                    setRunningAnalysis(false);
+                                    alert('Gym Intelligence Engine initialised and analysis completed successfully. Check notifications for insights.');
+                                }}
+                                disabled={runningAnalysis}
+                                className="text-black bg-primary px-4 py-1.5 rounded-lg flex items-center gap-1 font-bold text-sm hover:bg-green-600 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                                {runningAnalysis ? 'Analyzing...' : 'Run Intelligence Analysis'}
+                            </button>
+                        </div>
                     </div>
                     <div className="flex-1 w-full min-h-[300px] relative">
                         {/* SVG Chart */}

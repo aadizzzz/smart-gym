@@ -17,6 +17,7 @@ import { GymManagement } from './pages/GymManagement';
 import { Leads } from './pages/Leads';
 import { Automation } from './pages/Automation';
 import { Settings } from './pages/Settings';
+import { Inventory } from './pages/Inventory';
 import { ChooseGym } from './components/ChooseGym';
 import { ChoosePlan } from './components/ChoosePlan';
 import { ChooseGoals } from './components/ChooseGoals';
@@ -116,6 +117,7 @@ const AppRoutes = () => {
               <Route path="/admin/leads" element={<Leads />} />
               <Route path="/admin/automation" element={<Automation />} />
               <Route path="/admin/settings" element={<Settings />} />
+              <Route path="/admin/inventory" element={<Inventory />} />
             </Route>
           </Route>
 

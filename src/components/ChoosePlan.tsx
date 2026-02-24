@@ -52,7 +52,7 @@ export const ChoosePlan: React.FC = () => {
         if (!user || !gymId) return;
         setSubmitting(true);
         try {
-            const { error } = await supabase
+            const { data: memberData, error } = await supabase
                 .from('members')
                 .insert([
                     {
@@ -63,9 +63,46 @@ export const ChoosePlan: React.FC = () => {
                         join_date: new Date().toISOString(),
                         expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Default 30 days
                     }
-                ]);
+                ])
+                .select()
+                .single();
 
             if (error) throw error;
+            if (!memberData) throw new Error("No member data returned");
+
+            // --- GYM INTELLIGENCE ENGINE TRIGGER ---
+            // 1. Auto-assign trainer
+            try {
+                const { assignTrainerToMember } = await import('../services/automation/AutoTrainer');
+                await assignTrainerToMember(memberData.id, gymId);
+            } catch (autoErr) {
+                console.error('AutoTrainer Error:', autoErr);
+            }
+
+            // 2. Generate Payment & Auto Invoice
+            try {
+                const { data: paymentData, error: paymentError } = await supabase
+                    .from('payments')
+                    .insert([
+                        {
+                            member_id: memberData.id,
+                            gym_id: gymId,
+                            amount: plan.price,
+                            payment_date: new Date().toISOString(),
+                            status: 'completed'
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (!paymentError && paymentData) {
+                    const { generateInvoice } = await import('../services/automation/AutoInvoice');
+                    await generateInvoice(paymentData.id, gymId, plan.price);
+                }
+            } catch (invoiceErr) {
+                console.error('AutoInvoice Error:', invoiceErr);
+            }
+            // ---------------------------------------
 
             await refreshAuth();
             navigate('/dashboard');

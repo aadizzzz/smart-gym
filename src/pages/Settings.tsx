@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency, CURRENCIES } from '../context/CurrencyContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface UserProfile {
     full_name: string;
@@ -18,6 +19,7 @@ export const Settings: React.FC = () => {
     const { user, refreshAuth } = useAuth();
     const { role } = useAuth();
     const { currency, setCurrency } = useCurrency();
+    const { theme, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile');
     const [loading, setLoading] = useState(false);
     const [currencySearch, setCurrencySearch] = useState('');
@@ -266,9 +268,18 @@ export const Settings: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex bg-[var(--surface-highlight)] p-1 rounded-lg">
-                                            <button className="px-3 py-1.5 rounded-md text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Light</button>
-                                            <button className="px-3 py-1.5 rounded-md text-xs font-bold bg-[var(--surface)] text-[var(--text-primary)] shadow-sm">Dark</button>
-                                            <button className="px-3 py-1.5 rounded-md text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]">System</button>
+                                            <button
+                                                onClick={() => setTheme('light')}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'light' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
+                                            >Light</button>
+                                            <button
+                                                onClick={() => setTheme('dark')}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'dark' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
+                                            >Dark</button>
+                                            <button
+                                                onClick={() => setTheme('system')}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'system' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
+                                            >System</button>
                                         </div>
                                     </div>
 
