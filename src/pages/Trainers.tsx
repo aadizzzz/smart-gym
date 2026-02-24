@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export const Trainers: React.FC = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [email, setEmail] = useState('');
 
-    const handleAddTrainer = (e: React.FormEvent) => {
+    const handleAddTrainer = async (e: React.FormEvent) => {
         e.preventDefault();
-        alert("Trainer invitations require a backend email service to generate auth links. This UI is a placeholder for the Edge Function integration.");
+
+        try {
+            await supabase.functions.invoke('send-email', {
+                body: {
+                    to: email,
+                    subject: "You've been invited to join the Gym as a Trainer!",
+                    html: `
+                        <h2>Welcome to the Team!</h2>
+                        <p>You have been invited to join the gym platform as a certified personal trainer.</p>
+                        <p>To set up your profile, view your assigned members, and manage your schedule, please click the link below to get started:</p>
+                        <br/>
+                        <a href="https://smartgym.com/login" style="padding: 10px 20px; background-color: #0fd60f; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to your Dashboard</a>
+                        <br/><br/>
+                        <p>Best,<br/>Your Gym Admin Team</p>
+                    `,
+                    fromName: "Gym Admin",
+                }
+            });
+            alert(`Invitation email successfully sent to ${email} via Resend Edge Function!`);
+        } catch (error) {
+            console.error("Failed to send trainer invitation email:", error);
+            alert("Failed to send invitation email. Check console for details.");
+        }
+
         setIsAddModalOpen(false);
     };
 

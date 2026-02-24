@@ -102,7 +102,30 @@ export const Members: React.FC = () => {
 
     const handleAddMember = async (e: React.FormEvent) => {
         e.preventDefault();
-        alert("Member invitations require a backend email service to generate auth links. This UI is a placeholder for the Edge Function integration.");
+
+        try {
+            await supabase.functions.invoke('send-email', {
+                body: {
+                    to: modalData.email,
+                    subject: "Welcome to the Gym! Here is your login link.",
+                    html: `
+                        <h2>Welcome to the Gym!</h2>
+                        <p>We are thrilled to have you join us. Your <strong>${modalData.plan}</strong> membership is now active.</p>
+                        <p>To access your member portal, book classes, and manage your membership, please download our app or login to the website.</p>
+                        <br/>
+                        <p>If you have any questions, just reply to this email.</p>
+                        <br/>
+                        <p>Best,<br/>Your Gym Admin Team</p>
+                    `,
+                    fromName: "Gym Admin",
+                }
+            });
+            alert(`Invitation email successfully sent to ${modalData.email} via Resend Edge Function!`);
+        } catch (error) {
+            console.error("Failed to send invitation email:", error);
+            alert("Failed to send invitation email. Check console for details.");
+        }
+
         setIsAddModalOpen(false);
     };
 

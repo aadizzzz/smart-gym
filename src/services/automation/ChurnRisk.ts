@@ -63,6 +63,37 @@ export const evaluateChurnRisk = async (gymId: string): Promise<void> => {
                     message: `Intelligence Engine: Member ${member.id} detected as high churn risk.`
                 });
 
+                // Attempt to send email to user
+                try {
+                    // We need the user's profile to get the email
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('email, full_name')
+                        .eq('id', member.user_id)
+                        .single();
+
+                    if (profile?.email) {
+                        await supabase.functions.invoke('send-email', {
+                            body: {
+                                to: profile.email,
+                                subject: "We miss you at the Gym! Here is 10% off.",
+                                html: `
+                                    <h2>Hey ${profile.full_name || 'Member'},</h2>
+                                    <p>We noticed you haven't been checking in lately! Staying consistent is the hardest part of fitness, but you've already taken the first step by joining.</p>
+                                    <p>To help you get back into the rhythm, we've added a <strong>10% discount</strong> to your next billing cycle.</p>
+                                    <p>If you need help or want to talk to a trainer about adjusting your goals, just reply to this email!</p>
+                                    <br/>
+                                    <p>Best,<br/>Your Gym Admin Team</p>
+                                `,
+                                fromName: "Gym Admin",
+                            }
+                        });
+                        console.log(`[Gym Intelligence] Success: Automated retention email sent to ${profile.email}.`);
+                    }
+                } catch (emailError) {
+                    console.error(`[Gym Intelligence] Failed to send retention email:`, emailError);
+                }
+
                 console.log(`[ChurnRisk] Member ${member.id} marked as churn risk.`);
             } else {
                 // Clear churn risk if they recovered
