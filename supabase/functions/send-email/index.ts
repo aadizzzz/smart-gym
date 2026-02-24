@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import nodemailer from "npm:nodemailer@6.9.13";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const GMAIL_EMAIL = Deno.env.get("GMAIL_EMAIL");
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -22,40 +24,37 @@ serve(async (req) => {
     }
 
     try {
-        if (!RESEND_API_KEY) {
-            throw new Error("RESEND_API_KEY is not set in Edge Function secrets.");
+        if (!GMAIL_EMAIL || !GMAIL_APP_PASSWORD) {
+            throw new Error("GMAIL_EMAIL or GMAIL_APP_PASSWORD is not set in Edge Function secrets.");
         }
 
-        const { to, subject, html, fromName = "Gym Admin", fromEmail = "admin@smartgym.com" }: EmailRequest = await req.json();
+        const { to, subject, html, fromName = "Gym Admin" }: EmailRequest = await req.json();
 
-        const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${RESEND_API_KEY}`,
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: GMAIL_EMAIL,
+                pass: GMAIL_APP_PASSWORD,
             },
-            body: JSON.stringify({
-                from: `${fromName} <${fromEmail}>`,
-                to: [to],
-                subject: subject,
-                html: html,
-            }),
+            // Important for some environments to prevent TLS issues
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            return new Response(JSON.stringify({ success: true, data }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-                status: 200,
-            });
-        } else {
-            const errorData = await res.text();
-            console.error("Resend API Error:", errorData);
-            return new Response(JSON.stringify({ success: false, error: errorData }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-                status: 400,
-            });
-        }
+        const info = await transporter.sendMail({
+            from: `"${fromName}" <${GMAIL_EMAIL}>`, // Must send from the authenticated Gmail
+            to: to,
+            subject: subject,
+            html: html,
+        });
+
+        console.log("Message sent: %s", info.messageId);
+
+        return new Response(JSON.stringify({ success: true, messageId: info.messageId }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+        });
     } catch (error: any) {
         console.error("Edge Function Error:", error);
         return new Response(JSON.stringify({ success: false, error: error.message }), {
