@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency, CURRENCIES } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
 
 interface UserProfile {
     full_name: string;
@@ -15,14 +14,23 @@ interface UserProfile {
     avatar_url: string;
 }
 
+const ACCENT_COLORS = [
+    { id: 'green', hex: '#13ec13', label: 'Neon Green' },
+    { id: 'blue', hex: '#3b82f6', label: 'Ocean Blue' },
+    { id: 'purple', hex: '#a855f7', label: 'Purple' },
+    { id: 'orange', hex: '#f97316', label: 'Orange' },
+    { id: 'rose', hex: '#f43f5e', label: 'Rose Red' },
+    { id: 'indigo', hex: '#6366f1', label: 'Indigo' },
+];
+
 export const Settings: React.FC = () => {
-    const { user, refreshAuth } = useAuth();
-    const { role } = useAuth();
+    const { user, role, themePreference, accentColor, refreshAuth } = useAuth();
     const { currency, setCurrency } = useCurrency();
-    const { theme, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile');
     const [loading, setLoading] = useState(false);
     const [currencySearch, setCurrencySearch] = useState('');
+    const [savingPrefs, setSavingPrefs] = useState(false);
+    const [savedPrefs, setSavedPrefs] = useState(false);
 
     const [profile, setProfile] = useState<UserProfile>({
         full_name: '',
@@ -69,6 +77,37 @@ export const Settings: React.FC = () => {
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
+    };
+
+    const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+        if (!user) return;
+        // Apply immediately to DOM
+        const root = document.documentElement;
+        if (newTheme === 'dark') {
+            root.classList.add('dark');
+        } else if (newTheme === 'light') {
+            root.classList.remove('dark');
+        } else {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.classList.toggle('dark', isDark);
+        }
+        // Persist to DB
+        await supabase.from('profiles').update({ theme_preference: newTheme }).eq('id', user.id);
+        await refreshAuth();
+    };
+
+    const handleAccentChange = async (colorId: string, hex: string) => {
+        if (!user) return;
+        // Apply immediately to DOM
+        document.documentElement.style.setProperty('--color-primary', hex);
+        document.documentElement.style.setProperty('--primary', hex);
+        // Persist to DB
+        setSavingPrefs(true);
+        await supabase.from('profiles').update({ accent_color: colorId }).eq('id', user.id);
+        await refreshAuth();
+        setSavingPrefs(false);
+        setSavedPrefs(true);
+        setTimeout(() => setSavedPrefs(false), 2000);
     };
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -254,12 +293,20 @@ export const Settings: React.FC = () => {
                     {activeTab === 'preferences' && (
                         <div className="max-w-3xl space-y-8">
                             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-3xl p-8 space-y-6">
-                                <h3 className="text-xl font-bold text-[var(--text-primary)]">App Appearance</h3>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-bold text-[var(--text-primary)]">App Appearance</h3>
+                                    {savedPrefs && (
+                                        <span className="text-xs font-bold text-green-400 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[16px]">check_circle</span> Saved!
+                                        </span>
+                                    )}
+                                </div>
 
                                 <div className="space-y-4">
+                                    {/* Theme Toggle */}
                                     <div className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)]">
                                         <div className="flex items-center gap-4">
-                                            <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                                 <span className="material-symbols-outlined">dark_mode</span>
                                             </div>
                                             <div>
@@ -268,36 +315,47 @@ export const Settings: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex bg-[var(--surface-highlight)] p-1 rounded-lg">
-                                            <button
-                                                onClick={() => setTheme('light')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'light' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
-                                            >Light</button>
-                                            <button
-                                                onClick={() => setTheme('dark')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'dark' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
-                                            >Dark</button>
-                                            <button
-                                                onClick={() => setTheme('system')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${theme === 'system' ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'}`}
-                                            >System</button>
+                                            {(['light', 'dark', 'system'] as const).map((t) => (
+                                                <button
+                                                    key={t}
+                                                    onClick={() => handleThemeChange(t)}
+                                                    className={`px-3 py-1.5 rounded-md text-xs font-bold capitalize transition-all ${themePreference === t
+                                                        ? 'bg-primary text-black shadow-sm'
+                                                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]/50'
+                                                        }`}
+                                                >{t}</button>
+                                            ))}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)]">
+                                    {/* Accent Color Picker */}
+                                    <div className="p-4 bg-[var(--background)] rounded-2xl border border-[var(--border)] space-y-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="size-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+                                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                                 <span className="material-symbols-outlined">palette</span>
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-[var(--text-primary)]">Accent Color</h4>
-                                                <p className="text-xs text-[var(--text-secondary)]">Choose the primary brand color.</p>
+                                                <p className="text-xs text-[var(--text-secondary)]">Choose the primary brand color for the whole app.</p>
                                             </div>
+                                            {savingPrefs && <span className="material-symbols-outlined animate-spin text-primary ml-auto text-[18px]">sync</span>}
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button className="size-6 rounded-full bg-[#13ec13] ring-2 ring-offset-2 ring-offset-[var(--background)] ring-[#13ec13]"></button>
-                                            <button className="size-6 rounded-full bg-blue-500 hover:scale-110 transition-transform"></button>
-                                            <button className="size-6 rounded-full bg-purple-500 hover:scale-110 transition-transform"></button>
-                                            <button className="size-6 rounded-full bg-orange-500 hover:scale-110 transition-transform"></button>
+                                        <div className="flex flex-wrap gap-3">
+                                            {ACCENT_COLORS.map((col) => (
+                                                <button
+                                                    key={col.id}
+                                                    title={col.label}
+                                                    onClick={() => handleAccentChange(col.id, col.hex)}
+                                                    style={{
+                                                        backgroundColor: col.hex,
+                                                        outlineColor: accentColor === col.id ? col.hex : 'transparent',
+                                                        outlineOffset: '3px',
+                                                        outlineWidth: accentColor === col.id ? '2px' : '0',
+                                                        outlineStyle: 'solid',
+                                                    }}
+                                                    className={`size-8 rounded-full transition-all hover:scale-110 ${accentColor === col.id ? 'scale-110' : ''}`}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

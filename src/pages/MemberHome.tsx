@@ -10,7 +10,8 @@ interface DashboardStats {
     level: number;
     expiryDate: string | null;
     planName: string;
-    weight: number;
+    weight: number | null;
+    weightChange: number | null;
     chartData: { date: string, value: number }[];
     notifications: any[];
 }
@@ -32,7 +33,7 @@ export const MemberHome: React.FC = () => {
     const { user, gymId } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState<DashboardStats>({
-        streak: 0, attendanceCount: 0, level: 1, expiryDate: null, planName: 'Loading...', weight: 0, chartData: [], notifications: []
+        streak: 0, attendanceCount: 0, level: 1, expiryDate: null, planName: 'Loading...', weight: null, weightChange: null, chartData: [], notifications: []
     });
     const [loading, setLoading] = useState(true);
 
@@ -77,11 +78,16 @@ export const MemberHome: React.FC = () => {
 
             const { data: notifs } = await supabase.from('member_notifications').select('*').eq('member_id', member.id).eq('is_read', false).order('created_at', { ascending: false }).limit(3);
 
-            // Inject fake demo data if tracking is empty for the WOW factor to demonstrate UI
-            const finalChart = prog && prog.length > 0 ? prog.map(p => ({ date: new Date(p.recorded_at).toLocaleDateString(), value: p.metric_value }))
-                : [{ date: 'Week 1', value: 82 }, { date: 'Week 2', value: 80 }, { date: 'Week 3', value: 78.5 }, { date: 'Week 4', value: 78 }];
+            // Real chart data — only from DB, no dummy
+            const finalChart = prog && prog.length > 0
+                ? prog.map(p => ({ date: new Date(p.recorded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }), value: p.metric_value }))
+                : [];
 
-            const currentWeight = prog && prog.length > 0 ? prog[prog.length - 1].metric_value : 78;
+            const currentWeight = prog && prog.length > 0 ? prog[prog.length - 1].metric_value : null;
+            // Calculate real weight change (first log vs latest)
+            const weightChange = prog && prog.length >= 2
+                ? +(prog[prog.length - 1].metric_value - prog[0].metric_value).toFixed(1)
+                : null;
 
             const finalNotifs = notifs && notifs.length > 0 ? notifs : [
                 { id: '1', title: 'Start your streak!', message: 'Check in at the gym to build your first streak.', created_at: new Date().toISOString() }
@@ -94,6 +100,7 @@ export const MemberHome: React.FC = () => {
                 expiryDate: member.expiry_date,
                 planName: member.membership_plan || 'Pro Plan',
                 weight: currentWeight,
+                weightChange,
                 chartData: finalChart,
                 notifications: finalNotifs
             });
@@ -197,49 +204,71 @@ export const MemberHome: React.FC = () => {
                                 <span className="material-symbols-outlined text-primary">monitoring</span>
                                 Progress Tracker
                             </h3>
-                            <p className="text-[var(--text-secondary)] text-sm mt-1">Weight Tracking (Last 30 Days)</p>
+                            <p className="text-[var(--text-secondary)] text-sm mt-1">Weight Tracking (All Time)</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-3xl font-black text-[var(--text-primary)]">{stats.weight} <span className="text-lg text-[var(--text-secondary)] font-medium">kg</span></p>
-                            <p className="text-emerald-500 text-sm font-bold flex items-center justify-end gap-1 mt-1">
-                                <span className="material-symbols-outlined text-[16px]">arrow_downward</span> 2.1kg
-                            </p>
+                            {stats.weight !== null ? (
+                                <>
+                                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.weight} <span className="text-lg text-[var(--text-secondary)] font-medium">kg</span></p>
+                                    {stats.weightChange !== null && (
+                                        <p className={`text-sm font-bold flex items-center justify-end gap-1 mt-1 ${stats.weightChange <= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                                            <span className="material-symbols-outlined text-[16px]">{stats.weightChange <= 0 ? 'arrow_downward' : 'arrow_upward'}</span>
+                                            {Math.abs(stats.weightChange)}kg
+                                        </p>
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-[var(--text-secondary)] text-sm">No data yet</p>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex-1 relative w-full h-full min-h-[200px] mt-auto">
-                        <svg className="w-full h-full overflow-visible" viewBox="0 0 800 200" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="progGradient" x1="0" x2="0" y1="0" y2="1">
-                                    <stop offset="0%" stopColor="var(--color-primary, #13ec13)" stopOpacity="0.4"></stop>
-                                    <stop offset="100%" stopColor="var(--color-primary, #13ec13)" stopOpacity="0"></stop>
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d={`${getSmoothPath(800, 200)} V 200 H 0 Z`}
-                                fill="url(#progGradient)"
-                            />
-                            <path
-                                className="drop-shadow-[0_0_12px_rgba(19,236,19,0.8)]"
-                                d={getSmoothPath(800, 200)}
-                                fill="none"
-                                stroke="var(--color-primary, #13ec13)"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="4"
-                            />
-                            {stats.chartData.map((d, i) => {
-                                const maxVal = Math.max(...stats.chartData.map(val => val.value)) + 5;
-                                const minVal = Math.max(0, Math.min(...stats.chartData.map(val => val.value)) - 5);
-                                const range = maxVal - minVal;
-                                const x = (i / (stats.chartData.length - 1)) * 800;
-                                const y = 200 - (((d.value - minVal) / range) * (200 * 0.8)) - (200 * 0.1);
-                                return (
-                                    <circle key={i} cx={x} cy={y} r="6" fill="var(--surface)" stroke="var(--color-primary, #13ec13)" strokeWidth="3" className="hover:r-[8px] transition-all cursor-pointer" />
-                                );
-                            })}
-                        </svg>
-                    </div>
+                    {stats.chartData.length >= 2 ? (
+                        <div className="flex-1 relative w-full h-full min-h-[200px] mt-auto">
+                            <svg className="w-full h-full overflow-visible" viewBox="0 0 800 200" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="progGradient" x1="0" x2="0" y1="0" y2="1">
+                                        <stop offset="0%" stopColor="var(--color-primary, #13ec13)" stopOpacity="0.4"></stop>
+                                        <stop offset="100%" stopColor="var(--color-primary, #13ec13)" stopOpacity="0"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d={`${getSmoothPath(800, 200)} V 200 H 0 Z`}
+                                    fill="url(#progGradient)"
+                                />
+                                <path
+                                    className="drop-shadow-[0_0_12px_rgba(19,236,19,0.8)]"
+                                    d={getSmoothPath(800, 200)}
+                                    fill="none"
+                                    stroke="var(--color-primary, #13ec13)"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="4"
+                                />
+                                {stats.chartData.map((d, i) => {
+                                    const maxVal = Math.max(...stats.chartData.map(val => val.value)) + 5;
+                                    const minVal = Math.max(0, Math.min(...stats.chartData.map(val => val.value)) - 5);
+                                    const range = maxVal - minVal;
+                                    const x = (i / (stats.chartData.length - 1)) * 800;
+                                    const y = 200 - (((d.value - minVal) / range) * (200 * 0.8)) - (200 * 0.1);
+                                    return (
+                                        <circle key={i} cx={x} cy={y} r="6" fill="var(--surface)" stroke="var(--color-primary, #13ec13)" strokeWidth="3" className="hover:r-[8px] transition-all cursor-pointer" />
+                                    );
+                                })}
+                            </svg>
+                            <div className="flex justify-between mt-3 px-1">
+                                {stats.chartData.map((d, i) => (
+                                    <span key={i} className="text-[10px] text-[var(--text-tertiary)] font-medium">{d.date}</span>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 opacity-60">
+                            <span className="material-symbols-outlined text-5xl text-[var(--text-tertiary)]">monitor_weight</span>
+                            <p className="text-[var(--text-secondary)] font-semibold">No weight data logged yet</p>
+                            <p className="text-xs text-[var(--text-tertiary)] max-w-xs">Go to your Profile page and log your weight to see your progress chart here.</p>
+                        </div>
+                    )}
                 </motion.div>
 
                 {/* Membership & Notifications */}

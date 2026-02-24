@@ -27,6 +27,37 @@ export const MemberSettings: React.FC = () => {
         setCol(accentColor || 'green');
     }, [themePreference, accentColor]);
 
+    const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+        setTheme(newTheme);
+        // Apply immediately to DOM
+        const root = document.documentElement;
+        if (newTheme === 'dark') {
+            root.classList.add('dark');
+        } else if (newTheme === 'light') {
+            root.classList.remove('dark');
+        } else {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.classList.toggle('dark', isDark);
+        }
+        if (!user) return;
+        await supabase.from('profiles').update({ theme_preference: newTheme }).eq('id', user.id);
+        await refreshAuth();
+    };
+
+    const handleAccentChange = async (colorId: string, colorHex: string) => {
+        setCol(colorId);
+        // Apply immediately to DOM
+        document.documentElement.style.setProperty('--color-primary', colorHex);
+        document.documentElement.style.setProperty('--primary', colorHex);
+        if (!user) return;
+        setIsSaving(true);
+        await supabase.from('profiles').update({ accent_color: colorId }).eq('id', user.id);
+        await refreshAuth();
+        setIsSaving(false);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+    };
+
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);
@@ -35,7 +66,6 @@ export const MemberSettings: React.FC = () => {
                 theme_preference: theme,
                 accent_color: col
             }).eq('id', user.id);
-
             await refreshAuth();
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
@@ -45,6 +75,7 @@ export const MemberSettings: React.FC = () => {
             setIsSaving(false);
         }
     };
+
 
     const handlePasswordReset = async () => {
         if (!user?.email) return;
@@ -95,13 +126,13 @@ export const MemberSettings: React.FC = () => {
                             <p className="text-xs text-[var(--text-secondary)] mt-1">Switch between light, dark, and system</p>
                         </div>
                         <div className="bg-[var(--background)] p-1 rounded-xl flex items-center gap-1 border border-[var(--border)]">
-                            <button onClick={() => setTheme('light')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'light' ? 'bg-[var(--surface-highlight)] text-black dark:text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
+                            <button onClick={() => handleThemeChange('light')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'light' ? 'bg-primary text-black shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
                                 <span className="material-symbols-outlined text-[16px]">light_mode</span> Light
                             </button>
-                            <button onClick={() => setTheme('dark')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'dark' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
+                            <button onClick={() => handleThemeChange('dark')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'dark' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
                                 <span className="material-symbols-outlined text-[16px]">dark_mode</span> Dark
                             </button>
-                            <button onClick={() => setTheme('system')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'system' ? 'bg-[var(--surface-highlight)] text-black dark:text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
+                            <button onClick={() => handleThemeChange('system')} className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${theme === 'system' ? 'bg-primary text-black shadow-sm' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>
                                 <span className="material-symbols-outlined text-[16px]">desktop_windows</span> System
                             </button>
                         </div>
@@ -117,7 +148,7 @@ export const MemberSettings: React.FC = () => {
                             {COLORS.map(c => (
                                 <button
                                     key={c.id}
-                                    onClick={() => setCol(c.id)}
+                                    onClick={() => handleAccentChange(c.id, c.hex)}
                                     title={c.label}
                                     className={`size-10 rounded-full flex items-center justify-center transition-all ${col === c.id ? 'scale-110 ring-2 ring-offset-2 ring-offset-[var(--background)]' : 'hover:scale-105 opacity-50 hover:opacity-100'}`}
                                     style={{ backgroundColor: c.hex }}
