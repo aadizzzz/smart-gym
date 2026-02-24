@@ -329,12 +329,15 @@ export const MemberProfile: React.FC = () => {
                                         Edit
                                     </button>
                                 ) : (
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => setIsEditing(false)} className="text-xs font-bold text-[var(--text-secondary)] px-2 py-1.5">Cancel</button>
-                                        <button onClick={handleSaveProfile} disabled={saving} className="bg-primary text-black text-xs font-bold px-3 py-1.5 rounded-lg hover:brightness-110">
-                                            {saving ? 'Saving...' : 'Save'}
-                                        </button>
-                                    </div>
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => setIsEditing(false)} className="text-xs font-bold text-[var(--text-secondary)] px-2 py-1.5">Cancel</button>
+                                            <button onClick={handleSaveProfile} disabled={saving} className="bg-primary text-black text-xs font-bold px-3 py-1.5 rounded-lg hover:brightness-110">
+                                                {saving ? 'Saving...' : 'Save'}
+                                            </button>
+                                        </div>
+                                        {saveError && <p className="text-red-400 text-xs mt-1">{saveError}</p>}
+                                    </>
                                 )}
                             </div>
 
